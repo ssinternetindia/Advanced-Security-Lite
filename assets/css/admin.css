@@ -1,0 +1,1323 @@
+/**
+ * Advanced Security Lite - Complete New Design
+ * Modern Light Theme - Fresh Layout & Styling
+ */
+
+/* ========================================
+   CSS RESET & VARIABLES
+   ======================================== */
+:root {
+    /* Primary Palette */
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: #eef2ff;
+
+    /* Status Colors */
+    --success: #22c55e;
+    --success-light: #dcfce7;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --info: #3b82f6;
+    --info-light: #dbeafe;
+
+    /* Neutral Colors */
+    --white: #ffffff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+    /* Transitions */
+    --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   BASE WRAPPER
+   ======================================== */
+.asl-wrap {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--gray-50);
+    min-height: 100vh;
+    color: var(--gray-900);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+.asl-wrap * {
+    box-sizing: border-box;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.asl-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 32px;
+    /* WordPress admin bar */
+    z-index: 100;
+}
+
+.asl-header-left {
+    display: flex;
+    align-items: center;
+}
+
+.asl-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.asl-brand-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.asl-brand-text h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.asl-version {
+    font-size: 11px;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-2);
+}
+
+.asl-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.asl-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.asl-status-protected {
+    background: var(--success-light);
+    color: #166534;
+}
+
+.asl-status-partial {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.asl-status-unprotected {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+.asl-status-dot {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 50%;
+}
+
+.asl-status-protected .asl-status-dot {
+    background: var(--success);
+    color: white;
+}
+
+.asl-status-partial .asl-status-dot {
+    background: var(--warning);
+    color: white;
+}
+
+.asl-status-unprotected .asl-status-dot {
+    background: var(--danger);
+    color: white;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ========================================
+   HORIZONTAL TABS
+   ======================================== */
+.asl-tabs {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 var(--space-6);
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+}
+
+.asl-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.asl-tab:hover {
+    color: var(--gray-900);
+    background: var(--gray-50);
+}
+
+.asl-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.asl-tab-icon {
+    font-size: 16px;
+}
+
+/* ========================================
+   MAIN CONTENT
+   ======================================== */
+.asl-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-6);
+}
+
+/* ========================================
+   PANELS
+   ======================================== */
+.asl-panel {
+    display: none;
+}
+
+.asl-panel.active {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   STATS GRID
+   ======================================== */
+.asl-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.asl-stat-box {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    transition: var(--transition);
+}
+
+.asl-stat-box:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+}
+
+.asl-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.asl-icon-primary {
+    background: var(--primary-light);
+}
+
+.asl-icon-success {
+    background: var(--success-light);
+}
+
+.asl-icon-warning {
+    background: var(--warning-light);
+}
+
+.asl-icon-danger {
+    background: var(--danger-light);
+}
+
+.asl-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.asl-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.2;
+}
+
+.asl-stat-label {
+    font-size: 13px;
+    color: var(--gray-500);
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+.asl-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+    overflow: hidden;
+}
+
+.asl-card-header {
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.asl-card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-1) 0;
+}
+
+.asl-card-header p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+.asl-card-body {
+    padding: var(--space-5) var(--space-6);
+}
+
+.asl-card-info {
+    border-color: var(--info);
+    background: var(--info-light);
+}
+
+.asl-card-info .asl-card-header {
+    border-bottom-color: rgba(59, 130, 246, 0.2);
+}
+
+.asl-card-info h3 {
+    color: #1e40af;
+}
+
+/* ========================================
+   OPTIONS LIST
+   ======================================== */
+.asl-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.asl-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.asl-option:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.asl-option-info {
+    flex: 1;
+}
+
+.asl-option-info strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-900);
+    margin-bottom: 2px;
+}
+
+.asl-option-info span {
+    font-size: 13px;
+    color: var(--gray-500);
+}
+
+.asl-option-select {
+    cursor: default;
+}
+
+/* ========================================
+   SWITCH TOGGLE
+   ======================================== */
+.asl-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.asl-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.asl-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gray-300);
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.asl-switch-slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.asl-switch input:checked+.asl-switch-slider {
+    background: var(--primary);
+}
+
+.asl-switch input:checked+.asl-switch-slider::before {
+    transform: translateX(20px);
+}
+
+.asl-switch input:focus+.asl-switch-slider {
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.asl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    line-height: 1.5;
+}
+
+.asl-btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.asl-btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.asl-btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.asl-btn-outline:hover {
+    background: var(--gray-50);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.asl-btn-danger {
+    background: var(--danger);
+    color: var(--white);
+}
+
+.asl-btn-danger:hover {
+    background: #dc2626;
+}
+
+.asl-btn-lg {
+    padding: var(--space-3) var(--space-6);
+    font-size: 15px;
+}
+
+.asl-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+.asl-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.asl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.asl-form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.asl-input,
+.asl-select {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    font-size: 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--gray-900);
+    transition: var(--transition);
+}
+
+.asl-input:focus,
+.asl-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ========================================
+   CHECKLIST
+   ======================================== */
+.asl-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.asl-checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.asl-check-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.asl-check-warning {
+    border-left: 3px solid var(--warning);
+}
+
+.asl-check-success {
+    border-left: 3px solid var(--success);
+}
+
+/* ========================================
+   SAVE BAR
+   ======================================== */
+.asl-save-bar {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.asl-save-status {
+    font-size: 14px;
+    color: var(--success);
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+.asl-footer {
+    text-align: center;
+    padding: var(--space-6);
+    color: var(--gray-500);
+    font-size: 13px;
+}
+
+.asl-footer p {
+    margin: 0;
+}
+
+/* ========================================
+   ABOUT TAB STYLES
+   ======================================== */
+.asl-about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+}
+
+.asl-about-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.asl-info-table tr {
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.asl-info-table tr:last-child {
+    border-bottom: none;
+}
+
+.asl-info-table td {
+    padding: var(--space-3) 0;
+    font-size: 14px;
+}
+
+.asl-info-table td:first-child {
+    color: var(--gray-600);
+    width: 40%;
+}
+
+.asl-info-table td:last-child {
+    color: var(--gray-900);
+    font-weight: 500;
+}
+
+.asl-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.asl-feature-list li {
+    padding: 2px 0;
+    font-size: 14px;
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+/* Enhanced Developer Info */
+.asl-dev-info-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.asl-dev-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.asl-dev-icon-large {
+    font-size: 72px;
+    line-height: 1;
+}
+
+.asl-dev-title h4 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 var(--space-2) 0;
+    color: white;
+}
+
+.asl-dev-website {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all var(--transition);
+}
+
+.asl-dev-website:hover {
+    color: white;
+    transform: translateX(4px);
+}
+
+.asl-dev-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+}
+
+.asl-dev-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: all var(--transition);
+}
+
+.asl-dev-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.asl-dev-card-icon {
+    font-size: 40px;
+    margin-bottom: var(--space-3);
+}
+
+.asl-dev-card h5 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-dev-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.asl-dev-list li {
+    padding: var(--space-2) 0;
+    font-size: 14px;
+    color: var(--gray-700);
+    line-height: 1.6;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.asl-dev-list li:last-child {
+    border-bottom: none;
+}
+
+.asl-dev-list a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.asl-dev-list a:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-card-support {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.asl-dev-card-support h5 {
+    color: white;
+}
+
+.asl-dev-card-support p {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: var(--space-4);
+}
+
+.asl-dev-card-support .asl-btn-secondary {
+    background: white;
+    color: #667eea;
+    border: none;
+    font-weight: 600;
+}
+
+.asl-dev-card-support .asl-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(4px);
+}
+
+.asl-dev-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.asl-dev-logo {
+    text-align: center;
+    padding: var(--space-6) 0;
+}
+
+.asl-dev-icon {
+    font-size: 64px;
+    margin-bottom: var(--space-3);
+}
+
+.asl-dev-logo h4 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.asl-dev-details p {
+    margin: 0 0 var(--space-3) 0;
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.asl-dev-support {
+    background: var(--gray-50);
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+}
+
+.asl-dev-support h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.asl-dev-support p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+.asl-compat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+}
+
+.asl-compat-item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.asl-compat-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.asl-compat-item strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: var(--space-1);
+}
+
+.asl-compat-item p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.5;
+}
+
+.asl-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.asl-badge-success {
+    background: var(--success-light);
+    color: #166534;
+}
+
+.asl-card-info {
+    background: var(--info-light);
+    border-color: var(--info);
+}
+
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .asl-header {
+        flex-direction: column;
+        gap: var(--space-3);
+        text-align: center;
+    }
+
+    .asl-tabs {
+        padding: 0 var(--space-4);
+    }
+
+    .asl-tab {
+        padding: var(--space-3) var(--space-4);
+        font-size: 13px;
+    }
+
+    .asl-main {
+        padding: var(--space-4);
+    }
+
+    .asl-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .asl-option {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    .asl-btn-group {
+        flex-direction: column;
+    }
+
+    .asl-btn-group .asl-btn {
+        width: 100%;
+    }
+
+    .asl-about-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .asl-dev-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .asl-dev-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .asl-compat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+.asl-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.asl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.asl-table thead {
+    background: var(--gray-100);
+}
+
+.asl-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-weight: 600;
+    color: var(--gray-700);
+    white-space: nowrap;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.asl-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+    vertical-align: middle;
+}
+
+.asl-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.asl-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.asl-table code {
+    background: var(--gray-100);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+    color: var(--gray-800);
+}
+
+.asl-browser-cell,
+.asl-page-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.asl-empty-state {
+    text-align: center;
+    padding: var(--space-12) var(--space-6);
+}
+
+.asl-empty-icon {
+    font-size: 64px;
+    margin-bottom: var(--space-4);
+    opacity: 0.8;
+}
+
+.asl-empty-state h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.asl-empty-state p {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+/* ========================================
+   BADGE
+   ======================================== */
+.asl-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.asl-badge-success {
+    background: var(--success-light);
+    color: #166534;
+}
+
+.asl-badge-warning {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.asl-badge-danger {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+/* Secondary Button Style */
+.asl-btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.asl-btn-secondary:hover {
+    background: var(--gray-200);
+    color: var(--gray-900);
+}
+
+/* Textarea Styles */
+.asl-input[rows] {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Compact Developer Info Styles */
+.asl-dev-compact {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.asl-dev-compact .asl-dev-logo {
+    padding: 0;
+    margin-right: 20px;
+    font-size: 32px;
+    text-align: left;
+}
+
+.asl-dev-compact .asl-dev-details {
+    flex: 1;
+}
+
+.asl-dev-compact .asl-dev-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.asl-dev-compact .asl-dev-details p {
+    margin: 0 0 8px 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.asl-dev-compact .asl-dev-links {
+    display: flex;
+    gap: 15px;
+}
+
+.asl-dev-compact .asl-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.asl-dev-compact .asl-link:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-compact .asl-dev-actions {
+    margin-left: 24px;
+}
+/* Compact Developer Info V2 */
+.asl-dev-compact-v2 {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-logo {
+    padding: 0;
+    margin-right: 20px;
+    font-size: 32px;
+    text-align: left;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-details {
+    flex: 1;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-details p {
+    margin: 0 0 8px 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-links {
+    display: flex;
+    gap: 15px;
+}
+
+.asl-dev-compact-v2 .asl-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.asl-dev-compact-v2 .asl-link:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-actions {
+    margin-left: 24px;
+}
+/* ========================================
+   ICON STYLES
+   ======================================== */
+.ph {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1.25em;
+    /* Scale up slightly as Phosphor icons can be small */
+}
+
+/* Color icons with primary color as requested */
+.asl-brand-icon i,
+.asl-tab-icon i,
+.asl-header-right .asl-btn i,
+.asl-stat-icon i,
+.asl-card-header h3 i,
+.asl-empty-icon i {
+    color: var(--primary);
+}
+
+/* Specific adjustments */
+.asl-brand-icon i {
+    font-size: 28px;
+}
+
+.asl-stat-icon i {
+    font-size: 24px;
+}
+
+.asl-header-right .asl-btn i {
+    color: inherit;
+    /* Button icons should inherit button text color (white for primary) */
+    font-size: 1.1em;
+}
+
+.asl-card-header h3 i {
+    color: var(--primary);
+    margin-right: var(--space-2);
+}
+
+/* Status Icons */
+.asl-status-protected i {
+    color: #166534;
+}
+
+.asl-status-partial i {
+    color: #92400e;
+}
+
+.asl-status-unprotected i {
+    color: #991b1b;
+}
+
+/* Empty state icon override */
+.asl-empty-icon {
+    font-size: 48px;
+    color: var(--gray-300);
+    /* Default gray for empty state */
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+}
+
+.asl-empty-icon i {
+    color: var(--gray-300);
+    /* Keep empty state gray */
+    font-size: 48px;
+}

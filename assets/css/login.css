@@ -1,0 +1,504 @@
+/**
+ * Advanced Security Lite - Login Page Styles
+ * Modern Light Theme Design
+ */
+
+/* ========================================
+   CSS VARIABLES - Light Theme
+   ======================================== */
+:root {
+    --asp-login-primary: #4F46E5;
+    --asp-login-primary-light: #6366F1;
+    --asp-login-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --asp-login-bg: #F9FAFB;
+    --asp-login-card-bg: #FFFFFF;
+    --asp-login-text: #111827;
+    --asp-login-text-secondary: #6B7280;
+    --asp-login-border: #E5E7EB;
+    --asp-login-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   BODY & BACKGROUND
+   ======================================== */
+body.login {
+    background: var(--asp-login-bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body.login::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 50%, rgba(79, 70, 229, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ========================================
+   LOGIN CONTAINER
+   ======================================== */
+#login {
+    width: 420px;
+    padding: 8% 0 0;
+    margin: auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* ========================================
+   LOGO
+   ======================================== */
+#login h1 a {
+    background-image: none !important;
+    width: 100%;
+    height: auto;
+    text-indent: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2rem;
+    background: var(--asp-login-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+}
+
+#login h1 a::before {
+    content: '🛡️';
+    display: block;
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 8px rgba(79, 70, 229, 0.3));
+    -webkit-text-fill-color: initial;
+}
+
+/* ========================================
+   LOGIN FORM
+   ======================================== */
+#loginform,
+#registerform,
+#lostpasswordform {
+    background: var(--asp-login-card-bg);
+    border: 1px solid var(--asp-login-border);
+    border-radius: 1rem;
+    box-shadow: var(--asp-login-shadow);
+    padding: 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+#loginform::before,
+#registerform::before,
+#lostpasswordform::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--asp-login-gradient);
+}
+
+/* ========================================
+   FORM LABELS
+   ======================================== */
+#loginform label,
+#registerform label,
+#lostpasswordform label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--asp-login-text);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* ========================================
+   FORM INPUTS
+   ======================================== */
+#loginform input[type="text"],
+#loginform input[type="password"],
+#loginform input[type="email"],
+#registerform input[type="text"],
+#registerform input[type="password"],
+#registerform input[type="email"],
+#lostpasswordform input[type="text"],
+#lostpasswordform input[type="email"] {
+    background: var(--asp-login-bg);
+    border: 1px solid var(--asp-login-border);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    color: var(--asp-login-text);
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+#loginform input[type="text"]:focus,
+#loginform input[type="password"]:focus,
+#loginform input[type="email"]:focus,
+#registerform input[type="text"]:focus,
+#registerform input[type="password"]:focus,
+#registerform input[type="email"]:focus,
+#lostpasswordform input[type="text"]:focus,
+#lostpasswordform input[type="email"]:focus {
+    background: var(--asp-login-card-bg);
+    border-color: var(--asp-login-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+/* ========================================
+   SUBMIT BUTTON
+   ======================================== */
+#loginform .button-primary,
+#registerform .button-primary,
+#lostpasswordform .button-primary,
+.wp-core-ui .button-primary {
+    background: var(--asp-login-gradient);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-shadow: none;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+    width: 100%;
+    height: auto;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+#loginform .button-primary::before,
+#registerform .button-primary::before,
+#lostpasswordform .button-primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#loginform .button-primary:hover::before,
+#registerform .button-primary:hover::before,
+#lostpasswordform .button-primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#loginform .button-primary:hover,
+#registerform .button-primary:hover,
+#lostpasswordform .button-primary:hover,
+.wp-core-ui .button-primary:hover {
+    background: var(--asp-login-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(79, 70, 229, 0.4);
+}
+
+#loginform .button-primary:active,
+#registerform .button-primary:active,
+#lostpasswordform .button-primary:active {
+    transform: translateY(0);
+}
+
+/* ========================================
+   REMEMBER ME CHECKBOX
+   ======================================== */
+.login .forgetmenot {
+    margin-bottom: 1rem;
+}
+
+.login .forgetmenot label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--asp-login-text-secondary);
+    cursor: pointer;
+}
+
+.login .forgetmenot input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border-radius: 0.25rem;
+    border: 2px solid var(--asp-login-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login .forgetmenot input[type="checkbox"]:checked {
+    background: var(--asp-login-primary);
+    border-color: var(--asp-login-primary);
+}
+
+/* ========================================
+   LINKS
+   ======================================== */
+#nav,
+#backtoblog {
+    text-align: center;
+    padding: 0 1.5rem;
+}
+
+#nav a,
+#backtoblog a {
+    color: var(--asp-login-text-secondary);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+#nav a::after,
+#backtoblog a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--asp-login-primary);
+    transition: width 0.3s ease;
+}
+
+#nav a:hover,
+#backtoblog a:hover {
+    color: var(--asp-login-primary);
+}
+
+#nav a:hover::after,
+#backtoblog a:hover::after {
+    width: 100%;
+}
+
+/* ========================================
+   ERROR & SUCCESS MESSAGES
+   ======================================== */
+.login .message,
+.login #login_error {
+    border-left: 4px solid var(--asp-login-primary);
+    background: var(--asp-login-card-bg);
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.login .message {
+    border-left-color: #10B981;
+}
+
+.login #login_error {
+    border-left-color: #EF4444;
+}
+
+/* ========================================
+   reCAPTCHA
+   ======================================== */
+.g-recaptcha {
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   PRIVACY POLICY LINK
+   ======================================== */
+.privacy-policy-page-link {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.privacy-policy-page-link a {
+    color: var(--asp-login-text-secondary);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.privacy-policy-page-link a:hover {
+    color: var(--asp-login-primary);
+}
+
+/* ========================================
+   LANGUAGE SWITCHER
+   ======================================== */
+.language-switcher {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.language-switcher select {
+    background: var(--asp-login-card-bg);
+    border: 1px solid var(--asp-login-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--asp-login-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.language-switcher select:focus {
+    border-color: var(--asp-login-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 500px) {
+    #login {
+        width: 90%;
+        padding: 5% 0 0;
+    }
+
+    #loginform,
+    #registerform,
+    #lostpasswordform {
+        padding: 1.5rem;
+    }
+
+    #login h1 a {
+        font-size: 2rem;
+    }
+
+    #login h1 a::before {
+        font-size: 3rem;
+    }
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#loginform,
+#registerform,
+#lostpasswordform,
+.login .message,
+.login #login_error {
+    animation: fadeIn 0.5s ease;
+}
+
+/* ========================================
+   LOADING STATE
+   ======================================== */
+.login .button-primary.loading {
+    position: relative;
+    color: transparent;
+}
+
+.login .button-primary.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid #FFFFFF;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+.login input:focus,
+.login button:focus,
+.login a:focus {
+    outline: 2px solid var(--asp-login-primary);
+    outline-offset: 2px;
+}
+
+/* ========================================
+   CUSTOM LOGIN PAGE ENHANCEMENTS
+   ======================================== */
+.asp-custom-login-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--asp-login-bg);
+    padding: 2rem;
+}
+
+.asp-custom-login-card {
+    background: var(--asp-login-card-bg);
+    border-radius: 1rem;
+    box-shadow: var(--asp-login-shadow);
+    padding: 3rem;
+    max-width: 450px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.asp-custom-login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--asp-login-gradient);
+}
+
+.asp-custom-login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.asp-custom-login-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--asp-login-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.asp-custom-login-header p {
+    color: var(--asp-login-text-secondary);
+    font-size: 0.875rem;
+}
