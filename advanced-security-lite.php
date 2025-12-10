@@ -76,7 +76,6 @@ if (!asp_check_requirements()) {
 }
 
 // Define plugin constants
-// Define plugin constants
 if (!defined('ASP_PLUGIN_FILE')) {
     define('ASP_PLUGIN_FILE', __FILE__);
 }
@@ -531,4 +530,5 @@ function asp_emergency_reset()
 
     wp_send_json_success('Emergency reset completed successfully');
 }
+
 
