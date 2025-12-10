@@ -1,7 +1,7 @@
 # Advanced Security Lite
 **Comprehensive WordPress Security Made Simple & Modern.**
 
-![Version](https://img.shields.io/badge/version-1.0.5-blue.svg) ![License](https://img.shields.io/badge/license-GPLv2-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-GPLv2-green.svg)
 
 **Advanced Security Lite** is a powerful, lightweight, and modern security plugin designed to protect your WordPress website from common threats, brute force attacks, and vulnerabilities. Featuring a state-of-the-art admin interface with **Phosphor Icons** and real-time status monitoring, it offers enterprise-grade security features without bloating your site.
 
@@ -70,3 +70,4 @@
 ---
 
 _Secure your WordPress site today with Advanced Security Lite._
+
