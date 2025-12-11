@@ -70,4 +70,3 @@
 ---
 
 _Secure your WordPress site today with Advanced Security Lite._
-

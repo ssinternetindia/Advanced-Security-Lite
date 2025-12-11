@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Advanced Security Lite
- * Plugin URI: https://ssinternet.in/
+ * Plugin URI: https://ssinternet.in/products/wordpress-plugins/advanced-security-lite
  * Description: A powerful WordPress security plugin featuring a modern, intuitive interface and advanced protection tools to safeguard your website from threats.
  * Version: 1.0.0
  * Author: Anuj Kumar Singh
@@ -75,6 +75,7 @@ if (!asp_check_requirements()) {
     return;
 }
 
+// Define plugin constants
 // Define plugin constants
 if (!defined('ASP_PLUGIN_FILE')) {
     define('ASP_PLUGIN_FILE', __FILE__);
@@ -530,5 +531,4 @@ function asp_emergency_reset()
 
     wp_send_json_success('Emergency reset completed successfully');
 }
-
 
