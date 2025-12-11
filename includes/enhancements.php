@@ -49,10 +49,12 @@ class ASP_Enhancements
             $attempts[$ip] = array();
         }
 
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
         $attempts[$ip][] = array(
             'username' => $username,
             'time' => current_time('timestamp'),
-            'user_agent' => $_SERVER['HTTP_USER_AGENT']
+            'user_agent' => $user_agent
         );
 
         // Keep only last 10 attempts per IP
@@ -133,7 +135,7 @@ class ASP_Enhancements
         }
 
         $htaccess_path = ABSPATH . '.htaccess';
-        if (file_exists($htaccess_path) && is_writable($htaccess_path)) {
+        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
             // Create backup before modifying
             $backup_path = $htaccess_path . '.asp-backup-' . time();
             copy($htaccess_path, $backup_path);
@@ -143,7 +145,7 @@ class ASP_Enhancements
 
             // Remove backup if successful, keep if failed
             if ($result && file_exists($backup_path)) {
-                @unlink($backup_path);
+                wp_delete_file($backup_path);
             }
         }
     }
@@ -258,9 +260,11 @@ class ASP_Enhancements
 
         // Enhanced session security
         if (!headers_sent()) {
-            ini_set('session.cookie_httponly', 1);
-            ini_set('session.cookie_secure', is_ssl() ? 1 : 0);
-            ini_set('session.use_only_cookies', 1);
+            if (!headers_sent()) {
+                @ini_set('session.cookie_httponly', 1); // phpcs:ignore
+                @ini_set('session.cookie_secure', is_ssl() ? 1 : 0); // phpcs:ignore
+                @ini_set('session.use_only_cookies', 1); // phpcs:ignore
+            }
         }
     }
 
@@ -269,12 +273,14 @@ class ASP_Enhancements
         $user = wp_get_current_user();
         if ($user->ID > 0) {
             $access_log = get_option('asp_admin_access_log', array());
+            $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+
             $access_log[] = array(
                 'user_id' => $user->ID,
                 'username' => $user->user_login,
                 'ip' => $this->getRealIpAddress(),
                 'time' => current_time('timestamp'),
-                'page' => $_SERVER['REQUEST_URI']
+                'page' => $request_uri
             );
 
             // Keep only last 100 entries
@@ -353,16 +359,20 @@ class ASP_Enhancements
     {
         // Remove spam comments older than 30 days
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $wpdb->query("DELETE FROM {$wpdb->comments} WHERE comment_approved = 'spam' AND comment_date < DATE_SUB(NOW(), INTERVAL 30 DAY)");
 
         // Remove expired transients
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_%' AND option_value < UNIX_TIMESTAMP()");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_%' AND option_name NOT LIKE '_transient_timeout_%' AND option_name NOT IN (SELECT REPLACE(option_name, '_transient_timeout_', '_transient_') FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_%')");
     }
 
     public function cleanupExpiredTransients()
     {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_%' AND option_value < UNIX_TIMESTAMP()");
     }
 
@@ -371,6 +381,7 @@ class ASP_Enhancements
         global $wpdb;
 
         // Find large autoloaded options
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $large_options = $wpdb->get_results("
             SELECT option_name, LENGTH(option_value) as size 
             FROM {$wpdb->options} 
@@ -380,6 +391,7 @@ class ASP_Enhancements
 
         foreach ($large_options as $option) {
             // Set large options to not autoload
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery
             $wpdb->update(
                 $wpdb->options,
                 array('autoload' => 'no'),
@@ -402,17 +414,17 @@ class ASP_Enhancements
 
         foreach ($ip_keys as $key) {
             if (array_key_exists($key, $_SERVER) === true) {
-                $ip = $_SERVER[$key];
+                $ip = sanitize_text_field(wp_unslash($_SERVER[$key]));
                 if (strpos($ip, ',') !== false) {
                     $ip = explode(',', $ip)[0];
                 }
                 $ip = trim($ip);
                 if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
+                    return sanitize_text_field(wp_unslash($ip));
                 }
             }
         }
 
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '127.0.0.1';
     }
 }

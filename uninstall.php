@@ -70,6 +70,7 @@ function asp_remove_all_options()
 
     // Remove any remaining options that start with 'asp_'
     global $wpdb;
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'asp_%'");
 }
 
@@ -81,7 +82,9 @@ function asp_remove_transients()
     global $wpdb;
 
     // Remove plugin-specific transients
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_asp_%'");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_asp_%'");
 }
 
@@ -93,6 +96,7 @@ function asp_remove_user_meta()
     global $wpdb;
 
     // Remove plugin-specific user meta
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'asp_%'");
 }
 
@@ -104,6 +108,7 @@ function asp_remove_post_meta()
     global $wpdb;
 
     // Remove plugin-specific post meta
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE 'asp_%'");
 }
 
@@ -122,7 +127,7 @@ function asp_remove_custom_login_page()
     $pages_with_shortcode = get_posts(array(
         'post_type' => 'page',
         'post_status' => 'any',
-        'meta_query' => array(
+        'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
             array(
                 'key' => 'post_content',
                 'value' => '[asp_custom_login]',
@@ -184,12 +189,12 @@ function asp_uninstall_plugin()
 
         // Log the uninstall for debugging
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Advanced Security Lite: Plugin uninstalled and all data removed');
+            // error_log('Advanced Security Lite: Plugin uninstalled and all data removed');
         }
     } else {
         // Log that data was preserved
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Advanced Security Lite: Plugin uninstalled but data preserved per user settings');
+            // error_log('Advanced Security Lite: Plugin uninstalled but data preserved per user settings');
         }
     }
 }

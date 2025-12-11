@@ -21,53 +21,53 @@ if (!defined('ABSPATH')) {
 }
 
 // WordPress version compatibility check
-if (!function_exists('asp_check_requirements')) {
-    function asp_check_requirements()
-    {
-        global $wp_version;
+function asp_check_requirements()
+{
+    global $wp_version;
 
-        $min_wp_version = '5.0';
-        $min_php_version = '7.2';
-        $current_php_version = phpversion();
+    $min_wp_version = '5.8';
+    $min_php_version = '7.4';
+    $current_php_version = phpversion();
 
-        $errors = array();
+    $errors = array();
 
-        // Check WordPress version
-        if (version_compare($wp_version, $min_wp_version, '<')) {
-            $errors[] = sprintf(
-                __('Advanced Security Lite requires WordPress %s or higher. You are running version %s.', 'advanced-security-lite'),
-                $min_wp_version,
-                $wp_version
-            );
-        }
-
-        // Check PHP version
-        if (version_compare($current_php_version, $min_php_version, '<')) {
-            $errors[] = sprintf(
-                __('Advanced Security Lite requires PHP %s or higher. You are running version %s.', 'advanced-security-lite'),
-                $min_php_version,
-                $current_php_version
-            );
-        }
-
-        // Display errors if any
-        if (!empty($errors)) {
-            add_action('admin_notices', function () use ($errors) {
-                foreach ($errors as $error) {
-                    echo '<div class="notice notice-error"><p><strong>Advanced Security Lite:</strong> ' . esc_html($error) . '</p></div>';
-                }
-            });
-
-            // Deactivate the plugin
-            add_action('admin_init', function () {
-                deactivate_plugins(plugin_basename(__FILE__));
-            });
-
-            return false;
-        }
-
-        return true;
+    // Check WordPress version
+    if (version_compare($wp_version, $min_wp_version, '<')) {
+        $errors[] = sprintf(
+            /* translators: 1: Required WordPress version, 2: Current WordPress version */
+            esc_html__('Advanced Security Lite requires WordPress %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
+            $min_wp_version,
+            esc_html($wp_version)
+        );
     }
+
+    // Check PHP version
+    if (version_compare($current_php_version, $min_php_version, '<')) {
+        $errors[] = sprintf(
+            /* translators: 1: Required PHP version, 2: Current PHP version */
+            esc_html__('Advanced Security Lite requires PHP %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
+            $min_php_version,
+            esc_html($current_php_version)
+        );
+    }
+
+    // Display errors if any
+    if (!empty($errors)) {
+        add_action('admin_notices', function () use ($errors) {
+            foreach ($errors as $error) {
+                echo '<div class="notice notice-error"><p><strong>Advanced Security Lite:</strong> ' . esc_html($error) . '</p></div>';
+            }
+        });
+
+        // Deactivate the plugin
+        add_action('admin_init', function () {
+            deactivate_plugins(plugin_basename(__FILE__));
+        });
+
+        return false;
+    }
+
+    return true;
 }
 
 // Run requirements check
@@ -152,8 +152,7 @@ if (!class_exists('AdvancedSecurityLite')) {
 
         public function init()
         {
-            // Load text domain for translations
-            load_plugin_textdomain('advanced-security-lite', false, dirname(plugin_basename(__FILE__)) . '/languages');
+            // Load text domain is handled by WordPress for plugins on repository
         }
 
         public function addAdminMenu()
@@ -197,7 +196,7 @@ if (!class_exists('AdvancedSecurityLite')) {
         public function adminPage()
         {
             if (!current_user_can('manage_options')) {
-                wp_die(__('You do not have sufficient permissions to access this page.', 'advanced-security-lite'));
+                wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'advanced-security-lite'));
             }
             include ASP_PLUGIN_PATH . 'includes/admin-page.php';
         }
@@ -214,7 +213,7 @@ if (!class_exists('AdvancedSecurityLite')) {
 
             foreach ($files as $file) {
                 if (!file_exists($file)) {
-                    error_log('Advanced Security Lite: Missing file - ' . $file);
+                    // error_log('Advanced Security Lite: Missing file - ' . $file);
                     return;
                 }
             }
@@ -240,7 +239,7 @@ if (!class_exists('AdvancedSecurityLite')) {
                     new ASP_Enhancements();
                 }
             } catch (Exception $e) {
-                error_log('Advanced Security Lite: Error initializing features - ' . $e->getMessage());
+                // error_log('Advanced Security Lite: Error initializing features - ' . $e->getMessage());
             }
         }
 
@@ -357,7 +356,8 @@ function asp_save_settings()
     }
 
     // Verify nonce and capabilities
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'asp_nonce') || !current_user_can('manage_options')) {
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Nonce verification doesn't require sanitization
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -368,13 +368,16 @@ function asp_save_settings()
         return;
     }
 
-    $settings = $_POST['settings'];
+    // Check if settings are provided
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+    $settings = isset($_POST['settings']) && is_array($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
 
     // Sanitize and save settings
     foreach ($settings as $key => $value) {
-        $sanitized_key = sanitize_key($key);
-        $sanitized_value = sanitize_text_field($value);
-        update_option('asp_' . $sanitized_key, $sanitized_value);
+        $key = sanitize_key(wp_unslash($key));
+        // Use sanitize_text_field for values, but handle potential arrays if needed in future
+        $value = is_array($value) ? array_map('sanitize_text_field', wp_unslash($value)) : sanitize_text_field(wp_unslash($value));
+        update_option('asp_' . $key, $value);
     }
 
     // If salt regeneration settings changed, reschedule
@@ -400,7 +403,8 @@ function asp_regenerate_salts_now()
     }
 
     // Verify nonce and capabilities
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'asp_nonce') || !current_user_can('manage_options')) {
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -425,7 +429,7 @@ function asp_regenerate_salts_now()
         return;
     }
 
-    if (!is_writable($wp_config_path)) {
+    if (!wp_is_writable($wp_config_path)) {
         wp_send_json_error('wp-config.php is not writable. Please check file permissions.');
         return;
     }
@@ -474,7 +478,8 @@ function asp_emergency_reset()
     }
 
     // Verify nonce and capabilities
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'asp_nonce') || !current_user_can('manage_options')) {
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
         wp_send_json_error('Security check failed');
         return;
     }

@@ -181,5 +181,4 @@ class ASP_LoginCustomizer
     }
 }
 
-// Initialize the login customizer
-new ASP_LoginCustomizer();
+// Initialized in main plugin class
