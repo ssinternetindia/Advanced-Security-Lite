@@ -1,6 +1,5 @@
 /**
- * Advanced Security Lite - Complete New Design
- * Modern Light Theme - Fresh Layout & Styling
+ * Advanced Security Lite
  */
 
 /* ========================================
@@ -1200,6 +1199,7 @@
 .asl-dev-compact .asl-dev-actions {
     margin-left: 24px;
 }
+
 /* Compact Developer Info V2 */
 .asl-dev-compact-v2 {
     display: flex;
@@ -1253,6 +1253,7 @@
 .asl-dev-compact-v2 .asl-dev-compact-actions {
     margin-left: 24px;
 }
+
 /* ========================================
    ICON STYLES
    ======================================== */

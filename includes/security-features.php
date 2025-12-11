@@ -285,6 +285,15 @@ class ASP_SecurityFeatures
 
     public function disableDirectoryListing()
     {
+        // Only run in admin context to avoid performance impact on frontend
+        if (!is_admin()) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
         $htaccess_path = ABSPATH . '.htaccess';
         $rules = array('Options -Indexes');
 

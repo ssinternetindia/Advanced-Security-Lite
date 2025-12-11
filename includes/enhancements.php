@@ -107,6 +107,15 @@ class ASP_Enhancements
 
     private function protectSensitiveFiles()
     {
+        // Only run in admin context
+        if (!is_admin()) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
         $sensitive_files = array(
             '.htaccess',
             'wp-config.php',

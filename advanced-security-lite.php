@@ -143,7 +143,8 @@ if (!class_exists('AdvancedSecurityLite')) {
             add_action('wp_enqueue_scripts', array($this, 'enqueueFrontendScripts'), 20);
 
             // Initialize security features after WordPress is fully loaded
-            add_action('init', array($this, 'initSecurityFeatures'), 20);
+            // Changed from 'init' to 'plugins_loaded' to ensure hooks added in features (like 'init') are valid
+            add_action('plugins_loaded', array($this, 'initSecurityFeatures'), 20);
 
             // Add custom cron schedules
             add_filter('cron_schedules', array($this, 'addCustomCronSchedules'), 20);
@@ -174,13 +175,10 @@ if (!class_exists('AdvancedSecurityLite')) {
                 return;
             }
 
-            // Enqueue Google Fonts
-            wp_enqueue_style('asp-google-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', array(), null);
+            // Enqueue Phosphor Icons (Local)
+            wp_enqueue_style('asp-phosphor-icons', ASP_PLUGIN_URL . 'assets/css/phosphor.css', array(), ASP_VERSION);
 
-            // Enqueue Phosphor Icons
-            wp_enqueue_script('asp-phosphor-icons', 'https://unpkg.com/@phosphor-icons/web', array(), null, false);
-
-            wp_enqueue_style('asp-admin-css', ASP_PLUGIN_URL . 'assets/css/admin.css', array('asp-google-fonts'), ASP_VERSION);
+            wp_enqueue_style('asp-admin-css', ASP_PLUGIN_URL . 'assets/css/admin.css', array('asp-phosphor-icons'), ASP_VERSION);
             wp_enqueue_script('asp-admin-js', ASP_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), ASP_VERSION, true);
 
             wp_localize_script('asp-admin-js', 'asp_ajax', array(
