@@ -132,6 +132,15 @@ class ASP_SecurityFeatures
         if (get_option('asp_limit_revisions', 0)) {
             add_filter('wp_revisions_to_keep', array($this, 'limitPostRevisions'), 10, 2);
         }
+
+        // File Protection Features
+        if (get_option('asp_disable_php_execution', 0)) {
+            add_action('admin_init', array($this, 'disablePhpExecution'));
+        }
+
+        if (get_option('asp_protect_sensitive_files', 0)) {
+            add_action('admin_init', array($this, 'protectSensitiveFiles'));
+        }
     }
 
     public function disableWpJson()
@@ -675,5 +684,135 @@ class ASP_SecurityFeatures
     {
         $limit = (int) get_option('asp_revisions_limit', 5);
         return $limit;
+    }
+
+    // Feature #16: Disable PHP Execution in uploads, plugins, themes folders
+    public function disablePhpExecution()
+    {
+        // Only run once per activation
+        $run_key = 'asp_php_execution_disabled';
+        if (get_transient($run_key)) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
+        // Directories to protect
+        $upload_dir = wp_upload_dir();
+        $directories = array(
+            $upload_dir['basedir'],                    // wp-content/uploads
+            WP_CONTENT_DIR . '/plugins',               // wp-content/plugins (optional, for extra security)
+            WP_CONTENT_DIR . '/themes',                // wp-content/themes (optional, for extra security)
+        );
+
+        $rules = array(
+            '# Advanced Security Lite - Disable PHP Execution',
+            '<Files "*.php">',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '<Files "*.phtml">',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '<Files "*.php5">',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '<Files "*.php7">',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '<Files "*.phar">',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+        );
+
+        foreach ($directories as $dir) {
+            $htaccess_path = trailingslashit($dir) . '.htaccess';
+
+            // Only create in uploads directory for safety (plugins/themes might need PHP)
+            if ($dir === $upload_dir['basedir']) {
+                if (!file_exists($htaccess_path)) {
+                    file_put_contents($htaccess_path, implode("\n", $rules));
+                } else {
+                    // Append our rules if not already present
+                    $content = file_get_contents($htaccess_path);
+                    if (strpos($content, 'Advanced Security Lite - Disable PHP Execution') === false) {
+                        file_put_contents($htaccess_path, $content . "\n" . implode("\n", $rules));
+                    }
+                }
+            }
+        }
+
+        set_transient($run_key, true, DAY_IN_SECONDS);
+    }
+
+    // Feature #17: Protect sensitive files (wp-config.php, .htaccess, etc.)
+    public function protectSensitiveFiles()
+    {
+        // Only run once per day
+        $run_key = 'asp_sensitive_files_protected';
+        if (get_transient($run_key)) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
+        $htaccess_path = ABSPATH . '.htaccess';
+
+        if (!file_exists($htaccess_path) || !wp_is_writable($htaccess_path)) {
+            return;
+        }
+
+        $rules = array(
+            '# Protect wp-config.php',
+            '<Files wp-config.php>',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '',
+            '# Protect .htaccess',
+            '<Files .htaccess>',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '',
+            '# Protect wp-config-sample.php',
+            '<Files wp-config-sample.php>',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '',
+            '# Block access to debugging logs',
+            '<Files debug.log>',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+            '',
+            '# Protect error_log files',
+            '<Files error_log>',
+            '    Order allow,deny',
+            '    Deny from all',
+            '</Files>',
+        );
+
+        // Create a backup before modifying
+        $backup_path = $htaccess_path . '.asp-backup-' . time();
+        copy($htaccess_path, $backup_path);
+
+        $result = insert_with_markers($htaccess_path, 'Advanced Security Lite - Sensitive Files Protection', $rules);
+
+        // Remove backup if successful, keep if failed
+        if ($result && file_exists($backup_path)) {
+            wp_delete_file($backup_path);
+        }
+
+        set_transient($run_key, true, DAY_IN_SECONDS);
     }
 }

@@ -14,12 +14,9 @@ class ASP_Recaptcha
 
     public function __construct()
     {
-        // Initialize immediately but check for WordPress readiness
-        if (function_exists('get_option')) {
-            $this->init();
-        } else {
-            add_action('init', array($this, 'init'));
-        }
+        // Always use init hook to ensure WordPress is fully ready
+        // and login hooks haven't fired yet
+        add_action('init', array($this, 'init'), 1);
     }
 
     public function init()
@@ -147,7 +144,7 @@ class ASP_Recaptcha
     {
         if ($this->v2_enabled) {
             echo '<div class="g-recaptcha" data-sitekey="' . esc_attr($this->site_key) . '"></div>';
-            echo '<style>.g-recaptcha { margin-bottom: 16px; }</style>';
+            echo '<style>.g-recaptcha { margin-bottom: 16px; display: flex; justify-content: center; }</style>';
         }
 
         if ($this->v3_enabled) {
@@ -159,7 +156,7 @@ class ASP_Recaptcha
     {
         if ($this->v2_enabled) {
             echo '<div class="g-recaptcha" data-sitekey="' . esc_attr($this->site_key) . '"></div>';
-            echo '<style>.g-recaptcha { margin-bottom: 16px; }</style>';
+            echo '<style>.g-recaptcha { margin-bottom: 16px; display: flex; justify-content: center; }</style>';
         }
 
         if ($this->v3_enabled) {
@@ -171,7 +168,7 @@ class ASP_Recaptcha
     {
         if ($this->v2_enabled) {
             echo '<div class="g-recaptcha" data-sitekey="' . esc_attr($this->site_key) . '"></div>';
-            echo '<style>.g-recaptcha { margin-bottom: 16px; }</style>';
+            echo '<style>.g-recaptcha { margin-bottom: 16px; display: flex; justify-content: center; }</style>';
         }
 
         if ($this->v3_enabled) {

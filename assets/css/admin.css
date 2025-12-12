@@ -623,6 +623,289 @@
     border-left: 3px solid var(--success);
 }
 
+/* Recommendation links */
+.asl-checklist li {
+    flex-wrap: wrap;
+}
+
+.asl-checklist li span {
+    flex: 1;
+    min-width: 200px;
+}
+
+.asl-rec-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    padding: 4px 10px;
+    background: var(--white);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.asl-rec-link:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+/* Recommendation summary */
+.asl-rec-summary {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--warning-light);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--warning);
+}
+
+.asl-rec-summary p {
+    margin: 0;
+    font-size: 14px;
+    color: #92400e;
+}
+
+/* ========================================
+   SECURITY SCORE WIDGET
+   ======================================== */
+.asl-security-score-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-sm);
+}
+
+.asl-score-circle {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    min-height: 120px;
+    max-height: 120px;
+    overflow: hidden;
+}
+
+.asl-circular-chart {
+    display: block;
+    width: 120px;
+    height: 120px;
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.asl-circle-bg {
+    fill: none;
+    stroke: var(--gray-200);
+    stroke-width: 3;
+}
+
+.asl-circle-progress {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 1s ease-in-out;
+}
+
+.asl-score-percentage {
+    fill: var(--gray-900);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.5em;
+    font-weight: 700;
+    text-anchor: middle;
+}
+
+.asl-score-info h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.asl-score-label {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-3);
+}
+
+.asl-score-details {
+    margin: 0;
+    font-size: 14px;
+    color: var(--gray-600);
+}
+
+.asl-score-details strong {
+    color: var(--gray-900);
+}
+
+/* Score Color Variants */
+.asl-score-excellent .asl-circle-progress {
+    stroke: var(--success);
+}
+
+.asl-score-excellent .asl-score-label {
+    background: var(--success-light);
+    color: #166534;
+}
+
+.asl-score-good .asl-circle-progress {
+    stroke: #22c55e;
+}
+
+.asl-score-good .asl-score-label {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.asl-score-fair .asl-circle-progress {
+    stroke: var(--warning);
+}
+
+.asl-score-fair .asl-score-label {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.asl-score-poor .asl-circle-progress {
+    stroke: var(--danger);
+}
+
+.asl-score-poor .asl-score-label {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+@media (max-width: 480px) {
+    .asl-security-score-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .asl-score-circle {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* ========================================
+   SECURITY RECOMMENDATIONS
+   ======================================== */
+.asl-rec-card {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-top: var(--space-6);
+}
+
+.asl-rec-card h4 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-rec-card h4 i {
+    font-size: 20px;
+}
+
+.asl-rec-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.asl-rec-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+    font-size: 14px;
+    color: var(--gray-700);
+}
+
+.asl-rec-list li:last-child {
+    margin-bottom: 0;
+}
+
+.asl-check-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+}
+
+.asl-check-icon i {
+    font-size: 20px;
+}
+
+.asl-check-warning .asl-check-icon {
+    color: #d97706;
+}
+
+.asl-check-success .asl-check-icon {
+    color: #16a34a;
+}
+
+.asl-check-success .asl-check-icon i {
+    color: #16a34a;
+}
+
+.asl-rec-list li span:not(.asl-check-icon) {
+    flex: 1;
+}
+
+.asl-rec-link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.asl-rec-link:hover {
+    text-decoration: underline;
+}
+
+.asl-rec-summary {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid #bfdbfe;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+.asl-rec-summary p {
+    margin: 0;
+}
+
+.asl-rec-summary strong {
+    color: #d97706;
+}
+
 /* ========================================
    SAVE BAR
    ======================================== */
@@ -1321,4 +1604,53 @@
     color: var(--gray-300);
     /* Keep empty state gray */
     font-size: 48px;
+}
+
+/* ========================================
+   ACTIVITY LOG ACTIONS
+   ======================================== */
+.asl-log-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-4);
+}
+
+.asl-log-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-size: 13px;
+    color: var(--gray-600);
+    flex: 1;
+}
+
+.asl-log-info i {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.asl-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.asl-btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-1px);
+}
+
+.asl-btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
 }

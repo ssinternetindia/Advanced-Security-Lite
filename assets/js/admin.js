@@ -56,6 +56,19 @@
             if (hash && $('#panel-' + hash).length) {
                 $('.asl-tab[data-tab="' + hash + '"]').trigger('click');
             }
+
+            // Handle recommendation "Fix" links
+            $(document).on('click', '.asl-rec-link', function (e) {
+                e.preventDefault();
+                var targetTab = $(this).data('tab');
+                if (targetTab) {
+                    $('.asl-tab[data-tab="' + targetTab + '"]').trigger('click');
+                    // Scroll to top of the panel
+                    $('html, body').animate({
+                        scrollTop: $('#panel-' + targetTab).offset().top - 100
+                    }, 300);
+                }
+            });
         },
 
         // Initialize toggle switches
@@ -86,6 +99,12 @@
             $('#emergency-reset-btn').on('click', function (e) {
                 e.preventDefault();
                 ASL_Admin.emergencyReset();
+            });
+
+            // Clear logs button
+            $('#asp-clear-logs').on('click', function (e) {
+                e.preventDefault();
+                ASL_Admin.clearLogs();
             });
 
             // Conditional field visibility
@@ -312,6 +331,42 @@
                         setTimeout(function () {
                             window.location.reload();
                         }, 2000);
+                    } else {
+                        ASL_Admin.showNotification('Error: ' + response.data, 'error');
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                },
+                error: function () {
+                    ASL_Admin.showNotification('Connection error.', 'error');
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
+        },
+
+        // Clear all activity logs
+        clearLogs: function () {
+            var $btn = $('#asp-clear-logs');
+            var originalHtml = $btn.html();
+
+            if (!confirm('Are you sure you want to clear all activity logs? This action cannot be undone.')) {
+                return;
+            }
+
+            $btn.prop('disabled', true).text('Clearing...');
+
+            $.ajax({
+                url: asp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'asp_clear_logs',
+                    nonce: asp_ajax.nonce
+                },
+                success: function (response) {
+                    if (response.success) {
+                        ASL_Admin.showNotification('All logs cleared successfully! Reloading...', 'success');
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         ASL_Admin.showNotification('Error: ' + response.data, 'error');
                         $btn.prop('disabled', false).html(originalHtml);

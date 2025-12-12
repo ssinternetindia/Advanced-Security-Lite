@@ -177,8 +177,12 @@ if (!class_exists('AdvancedSecurityLite')) {
             // Enqueue Phosphor Icons (Local)
             wp_enqueue_style('asp-phosphor-icons', ASP_PLUGIN_URL . 'assets/css/phosphor.css', array(), ASP_VERSION);
 
-            wp_enqueue_style('asp-admin-css', ASP_PLUGIN_URL . 'assets/css/admin.css', array('asp-phosphor-icons'), ASP_VERSION);
-            wp_enqueue_script('asp-admin-js', ASP_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), ASP_VERSION, true);
+            // Use file modification time for cache busting during development
+            $css_version = filemtime(ASP_PLUGIN_PATH . 'assets/css/admin.css');
+            $js_version = filemtime(ASP_PLUGIN_PATH . 'assets/js/admin.js');
+
+            wp_enqueue_style('asp-admin-css', ASP_PLUGIN_URL . 'assets/css/admin.css', array('asp-phosphor-icons'), $css_version);
+            wp_enqueue_script('asp-admin-js', ASP_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), $js_version, true);
 
             wp_localize_script('asp-admin-js', 'asp_ajax', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
@@ -189,7 +193,8 @@ if (!class_exists('AdvancedSecurityLite')) {
         public function enqueueFrontendScripts()
         {
             if (get_option('asp_custom_login_design', 0)) {
-                wp_enqueue_style('asp-login-css', ASP_PLUGIN_URL . 'assets/css/login.css', array(), ASP_VERSION);
+                $login_css_version = filemtime(ASP_PLUGIN_PATH . 'assets/css/login.css');
+                wp_enqueue_style('asp-login-css', ASP_PLUGIN_URL . 'assets/css/login.css', array(), $login_css_version);
             }
         }
 
@@ -207,13 +212,12 @@ if (!class_exists('AdvancedSecurityLite')) {
             $files = array(
                 ASP_PLUGIN_PATH . 'includes/security-features.php',
                 ASP_PLUGIN_PATH . 'includes/recaptcha.php',
-                ASP_PLUGIN_PATH . 'includes/login-customizer.php',
                 ASP_PLUGIN_PATH . 'includes/enhancements.php'
             );
 
             foreach ($files as $file) {
                 if (!file_exists($file)) {
-                    // error_log('Advanced Security Lite: Missing file - ' . $file);
+                    error_log('Advanced Security Lite: Missing file - ' . $file);
                     return;
                 }
             }
@@ -221,7 +225,6 @@ if (!class_exists('AdvancedSecurityLite')) {
             // Include security modules
             require_once ASP_PLUGIN_PATH . 'includes/security-features.php';
             require_once ASP_PLUGIN_PATH . 'includes/recaptcha.php';
-            require_once ASP_PLUGIN_PATH . 'includes/login-customizer.php';
             require_once ASP_PLUGIN_PATH . 'includes/enhancements.php';
 
             // Initialize features based on settings with error handling
@@ -306,7 +309,10 @@ if (!class_exists('AdvancedSecurityLite')) {
                 'asp_maintenance_mode' => 0,
                 'asp_maintenance_message' => 'We are currently performing scheduled maintenance. Please check back soon.',
                 'asp_limit_revisions' => 0,
-                'asp_revisions_limit' => 5
+                'asp_revisions_limit' => 5,
+                // New file protection features
+                'asp_disable_php_execution' => 0,
+                'asp_protect_sensitive_files' => 0
             );
 
             foreach ($default_options as $option => $value) {
@@ -340,12 +346,47 @@ if (!function_exists('asp_safe_init')) {
 // Hook into WordPress initialization
 add_action('plugins_loaded', 'asp_safe_init', 1);
 
+// Schedule daily log cleanup
+add_action('init', function () {
+    if (!wp_next_scheduled('asp_cleanup_old_logs')) {
+        wp_schedule_event(time(), 'daily', 'asp_cleanup_old_logs');
+    }
+});
+add_action('asp_cleanup_old_logs', 'asp_cleanup_logs_older_than_3_days');
+
+/**
+ * Cleanup logs older than 3 days
+ */
+function asp_cleanup_logs_older_than_3_days()
+{
+    $three_days_ago = time() - (3 * DAY_IN_SECONDS);
+
+    // Cleanup failed logins
+    $failed_logins = get_option('asp_failed_logins', array());
+    foreach ($failed_logins as $ip => $attempts) {
+        $failed_logins[$ip] = array_filter($attempts, function ($attempt) use ($three_days_ago) {
+            return isset($attempt['time']) && $attempt['time'] > $three_days_ago;
+        });
+        if (empty($failed_logins[$ip])) {
+            unset($failed_logins[$ip]);
+        }
+    }
+    update_option('asp_failed_logins', $failed_logins);
+
+    // Cleanup admin access log
+    $admin_log = get_option('asp_admin_access_log', array());
+    $admin_log = array_filter($admin_log, function ($entry) use ($three_days_ago) {
+        return isset($entry['time']) && $entry['time'] > $three_days_ago;
+    });
+    update_option('asp_admin_access_log', array_values($admin_log));
+}
 
 // AJAX handlers - register after WordPress is loaded
 add_action('wp_loaded', function () {
     add_action('wp_ajax_asp_save_settings', 'asp_save_settings');
     add_action('wp_ajax_asp_regenerate_salts', 'asp_regenerate_salts_now');
     add_action('wp_ajax_asp_emergency_reset', 'asp_emergency_reset');
+    add_action('wp_ajax_asp_clear_logs', 'asp_clear_all_logs');
 });
 
 function asp_save_settings()
@@ -518,7 +559,10 @@ function asp_emergency_reset()
         'asp_disable_pingbacks' => 0,
         'asp_hide_admin_username' => 0,
         'asp_maintenance_mode' => 0,
-        'asp_limit_revisions' => 0
+        'asp_limit_revisions' => 0,
+        // File Protection features
+        'asp_disable_php_execution' => 0,
+        'asp_protect_sensitive_files' => 0
     );
 
     // Reset all options
@@ -535,3 +579,28 @@ function asp_emergency_reset()
     wp_send_json_success('Emergency reset completed successfully');
 }
 
+/**
+ * Clear all activity logs - AJAX handler
+ */
+function asp_clear_all_logs()
+{
+    // Check if this is a valid AJAX request
+    if (!defined('DOING_AJAX') || !DOING_AJAX) {
+        wp_die('Invalid request');
+    }
+
+    // Verify nonce and capabilities
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+
+    // Clear failed logins
+    update_option('asp_failed_logins', array());
+
+    // Clear admin access log
+    update_option('asp_admin_access_log', array());
+
+    wp_send_json_success('All logs have been cleared successfully');
+}

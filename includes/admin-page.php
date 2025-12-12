@@ -104,20 +104,87 @@ if (!defined('ABSPATH')) {
 
             <!-- Dashboard Panel -->
             <div id="panel-dashboard" class="asl-panel active">
+                <?php
+                // Calculate Security Score based on all key security features
+                $security_features = array(
+                    // General
+                    get_option('asp_disable_wp_json', 0),
+                    get_option('asp_disable_xmlrpc', 0),
+                    get_option('asp_disable_rest_api', 0),
+                    get_option('asp_auto_regenerate_salts', 0),
+                    // Authentication
+                    get_option('asp_recaptcha_v2_enabled', 0) || get_option('asp_recaptcha_v3_enabled', 0),
+                    get_option('asp_hide_login_errors', 0),
+                    // Firewall
+                    get_option('asp_disallow_bad_requests', 0),
+                    get_option('asp_prevent_user_enumeration', 0),
+                    get_option('asp_disallow_malicious_uploads', 0),
+                    // Hardening
+                    get_option('asp_hide_wp_version', 0),
+                    get_option('asp_hide_php_version', 0),
+                    get_option('asp_disallow_file_edit', 0),
+                    get_option('asp_protect_headers', 0),
+                    get_option('asp_obfuscate_author_slugs', 0),
+                    // File Protection
+                    get_option('asp_disable_php_execution', 0),
+                    get_option('asp_protect_sensitive_files', 0),
+                    // Tools
+                    get_option('asp_disable_app_passwords', 0),
+                );
+                $total_features = count($security_features);
+                $enabled_count = count(array_filter($security_features));
+                $security_score = round(($enabled_count / $total_features) * 100);
+
+                // Determine score color class
+                if ($security_score >= 80) {
+                    $score_class = 'asl-score-excellent';
+                    $score_label = __('Excellent', 'advanced-security-lite');
+                } elseif ($security_score >= 60) {
+                    $score_class = 'asl-score-good';
+                    $score_label = __('Good', 'advanced-security-lite');
+                } elseif ($security_score >= 40) {
+                    $score_class = 'asl-score-fair';
+                    $score_label = __('Fair', 'advanced-security-lite');
+                } else {
+                    $score_class = 'asl-score-poor';
+                    $score_label = __('Needs Attention', 'advanced-security-lite');
+                }
+                ?>
+
+                <!-- Security Score Card -->
+                <div class="asl-security-score-card <?php echo esc_attr($score_class); ?>">
+                    <div class="asl-score-circle">
+                        <svg viewBox="0 0 36 36" class="asl-circular-chart">
+                            <path class="asl-circle-bg" d="M18 2.0845
+                                   a 15.9155 15.9155 0 0 1 0 31.831
+                                   a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="asl-circle-progress"
+                                stroke-dasharray="<?php echo esc_attr($security_score); ?>, 100" d="M18 2.0845
+                                   a 15.9155 15.9155 0 0 1 0 31.831
+                                   a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <text x="18" y="20.35"
+                                class="asl-score-percentage"><?php echo esc_html($security_score); ?>%</text>
+                        </svg>
+                    </div>
+                    <div class="asl-score-info">
+                        <h3><?php esc_html_e('Security Score', 'advanced-security-lite'); ?></h3>
+                        <span class="asl-score-label"><?php echo esc_html($score_label); ?></span>
+                        <p class="asl-score-details">
+                            <strong><?php echo esc_html($enabled_count); ?></strong>
+                            <?php esc_html_e('of', 'advanced-security-lite'); ?>
+                            <strong><?php echo esc_html($total_features); ?></strong>
+                            <?php esc_html_e('security features enabled', 'advanced-security-lite'); ?>
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="asl-stats-grid">
                     <div class="asl-stat-box">
                         <div class="asl-stat-icon asl-icon-primary"><i class="ph ph-shield-check"></i></div>
                         <div class="asl-stat-info">
-                            <span class="asl-stat-number"><?php
-                            echo count(array_filter([
-                                get_option('asp_disable_wp_json', 0),
-                                get_option('asp_disable_xmlrpc', 0),
-                                get_option('asp_hide_wp_version', 0),
-                                get_option('asp_disallow_file_edit', 0),
-                                get_option('asp_protect_headers', 0)
-                            ]));
-                            ?>/5</span>
+                            <span
+                                class="asl-stat-number"><?php echo esc_html($enabled_count); ?>/<?php echo esc_html($total_features); ?></span>
                             <span
                                 class="asl-stat-label"><?php esc_html_e('Features Active', 'advanced-security-lite'); ?></span>
                         </div>
@@ -144,35 +211,138 @@ if (!defined('ABSPATH')) {
 
 
 
-                <!-- Security Tips -->
-                <div class="asl-card asl-card-info">
-                    <div class="asl-card-header">
-                        <h3><i class="ph ph-lightbulb"></i>
-                            <?php esc_html_e('Security Recommendations', 'advanced-security-lite'); ?></h3>
-                    </div>
-                    <div class="asl-card-body">
-                        <ul class="asl-checklist">
-                            <?php if (!get_option('asp_auto_regenerate_salts', 0)): ?>
+                <!-- Security Recommendations -->
+                <div class="asl-rec-card">
+                    <h4><i class="ph ph-lightbulb"></i>
+                        <?php esc_html_e('Security Recommendations', 'advanced-security-lite'); ?></h4>
+                    <div class="asl-rec-body">
+                        <?php
+                        // Count warnings to show appropriate message
+                        $warning_count = 0;
+                        ?>
+                        <ul class="asl-rec-list">
+                            <?php // Core Protection ?>
+                            <?php if (!get_option('asp_disable_xmlrpc', 0)):
+                                $warning_count++; ?>
                                 <li class="asl-check-warning">
-                                    <span class="asl-check-icon">⚠️</span>
-                                    <?php esc_html_e('Enable automatic salt regeneration for better security', 'advanced-security-lite'); ?>
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Disable XML-RPC to prevent brute force attacks', 'advanced-security-lite'); ?></span>
+                                    <a href="#general" class="asl-rec-link"
+                                        data-tab="general"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (!get_option('asp_recaptcha_v2_enabled', 0) && !get_option('asp_recaptcha_v3_enabled', 0)): ?>
+
+                            <?php if (!get_option('asp_disable_rest_api', 0)):
+                                $warning_count++; ?>
                                 <li class="asl-check-warning">
-                                    <span class="asl-check-icon">⚠️</span>
-                                    <?php esc_html_e('Add reCAPTCHA protection to prevent bot attacks', 'advanced-security-lite'); ?>
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Disable REST API for non-authenticated users', 'advanced-security-lite'); ?></span>
+                                    <a href="#general" class="asl-rec-link"
+                                        data-tab="general"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
                                 </li>
                             <?php endif; ?>
-                            <li class="asl-check-success">
-                                <span class="asl-check-icon">✅</span>
-                                <?php esc_html_e('Keep WordPress and plugins updated regularly', 'advanced-security-lite'); ?>
-                            </li>
-                            <li class="asl-check-success">
-                                <span class="asl-check-icon">✅</span>
-                                <?php esc_html_e('Use strong passwords and enable two-factor authentication', 'advanced-security-lite'); ?>
-                            </li>
+
+                            <?php // Salt Regeneration ?>
+                            <?php if (!get_option('asp_auto_regenerate_salts', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Enable automatic salt regeneration for enhanced cookie security', 'advanced-security-lite'); ?></span>
+                                    <a href="#general" class="asl-rec-link"
+                                        data-tab="general"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php // reCAPTCHA ?>
+                            <?php if (!get_option('asp_recaptcha_v2_enabled', 0) && !get_option('asp_recaptcha_v3_enabled', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Add reCAPTCHA protection to prevent bot login attacks', 'advanced-security-lite'); ?></span>
+                                    <a href="#authentication" class="asl-rec-link"
+                                        data-tab="authentication"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php // Login Security ?>
+                            <?php if (!get_option('asp_hide_login_errors', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Hide login errors to prevent username guessing', 'advanced-security-lite'); ?></span>
+                                    <a href="#authentication" class="asl-rec-link"
+                                        data-tab="authentication"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php // Firewall ?>
+                            <?php if (!get_option('asp_disallow_bad_requests', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Enable bad request filtering to block malicious queries', 'advanced-security-lite'); ?></span>
+                                    <a href="#firewall" class="asl-rec-link"
+                                        data-tab="firewall"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if (!get_option('asp_prevent_user_enumeration', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Prevent user enumeration to hide usernames from attackers', 'advanced-security-lite'); ?></span>
+                                    <a href="#firewall" class="asl-rec-link"
+                                        data-tab="firewall"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php // Hardening ?>
+                            <?php if (!get_option('asp_hide_wp_version', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Hide WordPress version to prevent targeted attacks', 'advanced-security-lite'); ?></span>
+                                    <a href="#hardening" class="asl-rec-link"
+                                        data-tab="hardening"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if (!get_option('asp_disallow_file_edit', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Disable file editor to prevent code injection if admin is compromised', 'advanced-security-lite'); ?></span>
+                                    <a href="#hardening" class="asl-rec-link"
+                                        data-tab="hardening"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php if (!get_option('asp_protect_headers', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Add security headers to protect against XSS and clickjacking', 'advanced-security-lite'); ?></span>
+                                    <a href="#hardening" class="asl-rec-link"
+                                        data-tab="hardening"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
+                            <?php // Show success message if all recommendations are addressed ?>
+                            <?php if ($warning_count === 0): ?>
+                                <li class="asl-check-success">
+                                    <span class="asl-check-icon"><i class="ph ph-check-circle"></i></span>
+                                    <span><?php esc_html_e('Excellent! All recommended security features are enabled.', 'advanced-security-lite'); ?></span>
+                                </li>
+                            <?php endif; ?>
                         </ul>
+                        <?php if ($warning_count > 0): ?>
+                            <div class="asl-rec-summary">
+                                <p>
+                                    <strong><?php echo esc_html($warning_count); ?></strong>
+                                    <?php echo esc_html(_n('recommendation needs attention', 'recommendations need attention', $warning_count, 'advanced-security-lite')); ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -572,6 +742,40 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
                 </div>
+
+                <div class="asl-card">
+                    <div class="asl-card-header">
+                        <h3><?php esc_html_e('File Protection', 'advanced-security-lite'); ?></h3>
+                        <p><?php esc_html_e('Protect sensitive files and prevent malicious code execution.', 'advanced-security-lite'); ?>
+                        </p>
+                    </div>
+                    <div class="asl-card-body">
+                        <div class="asl-options-list">
+                            <label class="asl-option">
+                                <div class="asl-option-info">
+                                    <strong><?php esc_html_e('Disable PHP Execution in Uploads', 'advanced-security-lite'); ?></strong>
+                                    <span><?php esc_html_e('Block PHP execution in wp-content/uploads directory', 'advanced-security-lite'); ?></span>
+                                </div>
+                                <div class="asl-switch">
+                                    <input type="checkbox" id="disable_php_execution" name="disable_php_execution" <?php checked(get_option('asp_disable_php_execution', 0), 1); ?>>
+                                    <span class="asl-switch-slider"></span>
+                                </div>
+                            </label>
+
+                            <label class="asl-option">
+                                <div class="asl-option-info">
+                                    <strong><?php esc_html_e('Protect Sensitive Files', 'advanced-security-lite'); ?></strong>
+                                    <span><?php esc_html_e('Block access to wp-config.php, .htaccess, debug.log', 'advanced-security-lite'); ?></span>
+                                </div>
+                                <div class="asl-switch">
+                                    <input type="checkbox" id="protect_sensitive_files" name="protect_sensitive_files"
+                                        <?php checked(get_option('asp_protect_sensitive_files', 0), 1); ?>>
+                                    <span class="asl-switch-slider"></span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tools Panel -->
@@ -682,6 +886,18 @@ if (!defined('ABSPATH')) {
 
             <!-- Activity Log Panel -->
             <div id="panel-activity" class="asl-panel">
+                <!-- Clear Logs Header -->
+                <div class="asl-log-actions">
+                    <p class="asl-log-info">
+                        <i class="ph ph-info"></i>
+                        <?php esc_html_e('Logs are automatically cleared after 3 days.', 'advanced-security-lite'); ?>
+                    </p>
+                    <button type="button" id="asp-clear-logs" class="asl-btn asl-btn-danger asl-btn-sm">
+                        <i class="ph ph-trash"></i>
+                        <?php esc_html_e('Clear All Logs', 'advanced-security-lite'); ?>
+                    </button>
+                </div>
+
                 <div class="asl-card">
                     <div class="asl-card-header">
                         <h3><?php esc_html_e('Failed Login Attempts', 'advanced-security-lite'); ?></h3>
@@ -690,6 +906,11 @@ if (!defined('ABSPATH')) {
                     </div>
                     <div class="asl-card-body">
                         <?php
+                        // Run cleanup before displaying to ensure 3-day old logs are removed
+                        if (function_exists('asp_cleanup_logs_older_than_3_days')) {
+                            asp_cleanup_logs_older_than_3_days();
+                        }
+
                         $failed_logins = get_option('asp_failed_logins', array());
                         $has_attempts = false;
 
