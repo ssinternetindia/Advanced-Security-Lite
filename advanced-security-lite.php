@@ -217,6 +217,7 @@ if (!class_exists('AdvancedSecurityLite')) {
 
             foreach ($files as $file) {
                 if (!file_exists($file)) {
+                    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
                     error_log('Advanced Security Lite: Missing file - ' . $file);
                     return;
                 }
