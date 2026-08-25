@@ -1,0 +1,874 @@
+/**
+ * Advanced Security Lite — Custom Login Design (Split Screen 40/60)
+ *
+ * Left 40%: dark brand panel (#asp-brand-panel, injected via login_header).
+ * Right 60%: centered form column. Written against the real wp-login.php
+ * DOM (#login, #loginform, .wp-pwd, .forgetmenot, #nav, #backtoblog) plus
+ * the plugin's .asp-captcha-wrap markup. Palette: navy/slate + blue accent.
+ */
+
+:root {
+    --asll-accent: #2563eb;
+    --asll-accent-strong: #1d4ed8;
+    --asll-accent-soft: rgba(37, 99, 235, 0.12);
+    --asll-bg: #f4f6fa;
+    --asll-card: #ffffff;
+    --asll-text: #0f172a;
+    --asll-text-soft: #64748b;
+    --asll-border: #e2e8f0;
+    --asll-input-border: #cbd5e1;
+    --asll-radius: 16px;
+    --asll-split: 40%;
+}
+
+/* ========================================
+   PAGE
+   ======================================== */
+body.login {
+    background: var(--asll-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--asll-text);
+}
+
+body.login a {
+    text-decoration: none;
+}
+
+/* ========================================
+   BRAND PANEL — LEFT 40%
+   ======================================== */
+#asp-brand-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--asll-split);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 48px 48px 36px;
+    color: #e2e8f0;
+    background:
+        radial-gradient(720px 420px at -10% -12%, rgba(37, 99, 235, 0.32), transparent 60%),
+        radial-gradient(640px 420px at 110% 115%, rgba(14, 165, 233, 0.22), transparent 58%),
+        linear-gradient(158deg, #0b1220 0%, #0e1a33 52%, #12275a 130%);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* subtle grid texture */
+#asp-brand-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.05) 0 1px, transparent 1px 56px),
+        repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.05) 0 1px, transparent 1px 56px);
+    mask-image: radial-gradient(80% 80% at 50% 40%, #000 30%, transparent 100%);
+    -webkit-mask-image: radial-gradient(80% 80% at 50% 40%, #000 30%, transparent 100%);
+    pointer-events: none;
+}
+
+#asp-brand-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* top: logo + site identity */
+.asp-brand-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.asp-brand-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 auto;
+    border-radius: 14px;
+    color: #93c5fd;
+    background: rgba(37, 99, 235, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08), 0 12px 28px -10px rgba(37, 99, 235, 0.45);
+}
+
+.asp-brand-logo svg {
+    width: 28px;
+    height: 28px;
+}
+
+.asp-brand-id {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.asp-brand-name {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f8fafc;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.asp-brand-tagline {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* middle: headline + sub text */
+.asp-brand-mid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 420px;
+}
+
+.asp-brand-headline {
+    margin: 0;
+    font-size: clamp(26px, 2.4vw, 34px);
+    line-height: 1.22;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #f1f5f9;
+}
+
+.asp-brand-sub {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #94a3b8;
+    max-width: 380px;
+}
+
+/* bottom: footer strip */
+.asp-brand-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    font-size: 12.5px;
+    color: #94a3b8;
+}
+
+.asp-brand-secure {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #93c5fd;
+}
+
+.asp-brand-secure svg {
+    width: 14px;
+    height: 14px;
+}
+
+.asp-brand-copy {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ========================================
+   FORM COLUMN — RIGHT 60%
+   ======================================== */
+body.login #login {
+    width: calc(100% - var(--asll-split));
+    margin: 0 0 0 var(--asll-split);
+    padding: 48px 32px 40px;
+    box-sizing: border-box;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+body.login #login > * {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* hide the small text logo on desktop — the brand panel carries identity */
+@media (min-width: 901px) {
+    body.login #login h1 {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
+/* ========================================
+   FORM CARD
+   ======================================== */
+body.login #loginform,
+body.login #registerform,
+body.login #lostpasswordform {
+    background: var(--asll-card);
+    border: 1px solid var(--asll-border);
+    border-radius: var(--asll-radius);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 16px 40px -16px rgba(15, 23, 42, 0.14);
+    padding: 36px 32px 30px;
+    margin-top: 0;
+    overflow: visible;
+}
+
+body.login form p {
+    margin-bottom: 18px;
+}
+
+body.login #nav,
+body.login #backtoblog {
+    max-width: 400px;
+}
+
+/* ========================================
+   LABELS & INPUTS
+   ======================================== */
+body.login #loginform label,
+body.login #registerform label,
+body.login #lostpasswordform label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--asll-text);
+    margin-bottom: 7px;
+    line-height: 1.4;
+}
+
+body.login #loginform .input,
+body.login #registerform .input,
+body.login #lostpasswordform .input,
+body.login input[type="text"].input,
+body.login input[type="password"].input,
+body.login input[type="email"].input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    font-size: 15px;
+    color: var(--asll-text);
+    background: #fbfcfe;
+    border: 1px solid var(--asll-input-border);
+    border-radius: 10px;
+    box-shadow: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+body.login .input:focus {
+    border-color: var(--asll-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--asll-accent-soft);
+    outline: none;
+}
+
+/* Password field with visibility toggle */
+body.login .user-pass-wrap {
+    position: relative;
+}
+
+body.login .wp-pwd {
+    position: relative;
+    display: block;
+}
+
+body.login .wp-pwd .input {
+    padding-right: 44px;
+}
+
+body.login .wp-pwd button.wp-hide-pw {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--asll-text-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.login .wp-pwd button.wp-hide-pw:hover,
+body.login .wp-pwd button.wp-hide-pw:focus {
+    background: var(--asll-accent-soft);
+    color: var(--asll-accent);
+}
+
+/* ========================================
+   IMAGE CAPTCHA (plugin markup)
+   ======================================== */
+body.login .asp-captcha-wrap {
+    margin: 2px 0 18px;
+}
+
+body.login .asp-captcha-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+body.login .asp-captcha-img {
+    border: 1px solid var(--asll-border);
+    border-radius: 10px;
+    background: #fbfcfe;
+}
+
+body.login .asp-captcha-refresh {
+    width: 46px;
+    height: 46px;
+    border: 1px solid var(--asll-input-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--asll-text-soft);
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+body.login .asp-captcha-refresh:hover:not(:disabled) {
+    border-color: var(--asll-accent);
+    color: var(--asll-accent);
+}
+
+body.login .asp-captcha-code {
+    height: 46px;
+    border: 1px solid var(--asll-input-border);
+    border-radius: 10px;
+    background: #fbfcfe;
+    padding: 0 14px;
+    font-size: 15px;
+    letter-spacing: 3px;
+}
+
+body.login .asp-captcha-code:focus {
+    border-color: var(--asll-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--asll-accent-soft);
+    outline: none;
+}
+
+/* ========================================
+   REMEMBER ME
+   ======================================== */
+body.login .forgetmenot {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 4px 0 18px !important;
+    float: none !important;
+}
+
+body.login .forgetmenot input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid var(--asll-input-border);
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s ease, border-color 0.12s ease;
+    flex: 0 0 auto;
+}
+
+body.login .forgetmenot input[type="checkbox"]:hover {
+    border-color: var(--asll-accent);
+}
+
+body.login .forgetmenot input[type="checkbox"]:checked {
+    background: var(--asll-accent);
+    border-color: var(--asll-accent);
+}
+
+body.login .forgetmenot input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1.5px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+body.login .forgetmenot label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--asll-text-soft);
+    cursor: pointer;
+}
+
+/* ========================================
+   SUBMIT BUTTON
+   ======================================== */
+body.login .submit {
+    float: none !important;
+    margin: 0 0 4px !important;
+}
+
+body.login #wp-submit,
+body.login .login .button-primary {
+    width: 100%;
+    height: 48px;
+    padding: 0 18px;
+    float: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #fff;
+    background: var(--asll-accent);
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    text-shadow: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+}
+
+body.login #wp-submit:hover,
+body.login .login .button-primary:hover {
+    background: var(--asll-accent-strong);
+    color: #fff;
+    box-shadow: 0 4px 14px -4px rgba(37, 99, 235, 0.5);
+}
+
+body.login #wp-submit:active {
+    transform: translateY(1px);
+}
+
+body.login #wp-submit:focus,
+body.login .login .button-primary:focus {
+    background: var(--asll-accent-strong);
+    border: none;
+    box-shadow: 0 0 0 3px var(--asll-accent-soft);
+}
+
+/* ========================================
+   MESSAGES & ERRORS
+   ======================================== */
+body.login #login_error,
+body.login .message,
+body.login .updated {
+    background: #fff;
+    border: 1px solid var(--asll-border);
+    border-left: 4px solid var(--asll-accent);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.12);
+    padding: 14px 16px !important;
+    font-size: 14px;
+    color: var(--asll-text);
+    margin: 0 0 18px !important;
+}
+
+body.login #login_error {
+    border-left-color: #dc2626;
+    background: #fef5f5;
+}
+
+/* ========================================
+   FOOTER LINKS
+   ======================================== */
+body.login #nav,
+body.login #backtoblog {
+    text-align: center;
+    margin: 12px 0 0;
+    font-size: 14px;
+}
+
+body.login #nav a,
+body.login #backtoblog a {
+    color: var(--asll-text-soft);
+    padding: 2px 4px;
+    transition: color 0.12s ease;
+}
+
+body.login #nav a:hover,
+body.login #backtoblog a:hover,
+body.login #nav a:focus,
+body.login #backtoblog a:focus {
+    color: var(--asll-accent);
+    background: transparent;
+}
+
+/* ========================================
+   LANGUAGE SWITCHER & MISC
+   ======================================== */
+body.login .language-switcher {
+    text-align: center;
+    margin-top: 16px;
+}
+
+body.login .language-switcher label {
+    color: var(--asll-text-soft);
+    font-size: 13px;
+}
+
+body.login .language-switcher select {
+    border: 1px solid var(--asll-input-border);
+    border-radius: 8px;
+    background: #fff;
+    padding: 4px 8px;
+}
+
+body.login #reg_passmail,
+body.login .login-action-register #login p.description {
+    color: var(--asll-text-soft);
+    font-size: 13.5px;
+}
+
+body.login ::selection {
+    background: var(--asll-accent-soft);
+}
+
+body.login ::-webkit-input-placeholder {
+    color: #94a3b8;
+}
+
+body.login ::placeholder {
+    color: #94a3b8;
+}
+
+/* ========================================
+   RESPONSIVE — panel collapses under 901px
+   ======================================== */
+@media (max-width: 900px) {
+    #asp-brand-panel {
+        display: none;
+    }
+
+    body.login #login {
+        width: 100%;
+        margin: 0;
+        padding: 40px 20px 32px;
+    }
+
+    /* bring the text logo back as the only identity on small screens */
+    body.login #login h1 {
+        position: static;
+        width: auto;
+        height: auto;
+        clip: auto;
+        overflow: visible;
+        white-space: normal;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    body.login #loginform,
+    body.login #registerform,
+    body.login #lostpasswordform {
+        padding: 26px 20px 24px;
+    }
+}
+
+/* ========================================
+   ENHANCED LAYOUT VARIANTS (admin options)
+   Body classes from ASP_LoginCustomizer:
+   asp-side-left|right|none + asp-form-solid|glass,
+   accent palette injected as inline :root vars.
+   ======================================== */
+
+/* Custom logo image — brand panel (left) and header h1 (centered/mobile) */
+.asp-brand-top img.asp-brand-img {
+    flex: 0 0 auto;
+    max-width: 170px;
+    max-height: 46px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+body.login #login h1 a {
+    display: inline-block;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+    background-image: none !important;
+    text-indent: 0 !important;
+    color: var(--asll-text);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+body.login #login h1 a .asp-login-logo {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 54px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ---------- Right panel ---------- */
+body.asp-side-right #asp-brand-panel {
+    left: auto;
+    right: 0;
+}
+
+body.asp-side-right #login {
+    margin: 0 var(--asll-split) 0 0;
+}
+
+/* ---------- No panel: centred card ---------- */
+body.asp-side-none {
+    background:
+        radial-gradient(900px 620px at 15% -10%, var(--asll-accent-soft), transparent 55%),
+        radial-gradient(820px 540px at 112% 112%, rgba(14, 165, 233, 0.1), transparent 55%),
+        var(--asll-bg);
+}
+
+body.asp-side-none #asp-brand-panel {
+    display: none;
+}
+
+body.asp-side-none #login {
+    width: 100%;
+    margin: 0;
+    padding: 48px 24px 40px;
+}
+
+body.asp-side-none #login h1 {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    overflow: visible;
+    white-space: normal;
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+body.asp-side-none #login h1 a {
+    color: var(--asll-text);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- Glass form style ---------- */
+body.asp-form-glass {
+    background:
+        radial-gradient(1000px 640px at 0% 0%, var(--asll-accent-soft), transparent 55%),
+        radial-gradient(900px 560px at 100% 100%, rgba(14, 165, 233, 0.12), transparent 55%),
+        linear-gradient(140deg, #eef2ff 0%, #f4f6fa 45%, #ecfeff 100%);
+}
+
+body.asp-form-glass #loginform,
+body.asp-form-glass #registerform,
+body.asp-form-glass #lostpasswordform {
+    background: rgba(255, 255, 255, 0.66);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 24px 60px -20px rgba(15, 23, 42, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body.asp-form-glass #loginform .input,
+body.asp-form-glass #registerform .input,
+body.asp-form-glass #lostpasswordform .input {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(203, 213, 225, 0.85);
+}
+
+body.asp-form-glass #login_error,
+body.asp-form-glass .message {
+    background: rgba(255, 255, 255, 0.7);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+/* ---------- Card detail: gradient top accent bar + solid hover lift ---------- */
+body.login #loginform,
+body.login #registerform,
+body.login #lostpasswordform {
+    position: relative;
+}
+
+body.login #loginform::before,
+body.login #registerform::before,
+body.login #lostpasswordform::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, var(--asll-accent), #38bdf8);
+    opacity: 0.85;
+}
+
+body.asp-form-solid #loginform:hover,
+body.asp-form-solid #registerform:hover,
+body.asp-form-solid #lostpasswordform:hover {
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 24px 54px -18px rgba(15, 23, 42, 0.18);
+}
+
+/* ========================================
+   MOTION & MICRO-INTERACTIONS
+   ======================================== */
+body.login #loginform,
+body.login #registerform,
+body.login #lostpasswordform {
+    animation: asl-rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.login #nav,
+body.login #backtoblog {
+    animation: asl-rise-in 0.5s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.login #asp-brand-panel {
+    animation: asl-fade-in 0.7s ease both;
+}
+
+@keyframes asl-rise-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes asl-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Aurora glow drift inside the brand panel */
+#asp-brand-panel::after {
+    content: "";
+    position: absolute;
+    left: -18%;
+    top: 20%;
+    width: 80%;
+    height: 58%;
+    background: radial-gradient(closest-side, var(--asll-accent-soft), rgba(37, 99, 235, 0.14) 55%, transparent 72%);
+    filter: blur(30px);
+    pointer-events: none;
+    animation: asl-aurora 16s ease-in-out infinite alternate;
+}
+
+@keyframes asl-aurora {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(12%, -6%, 0) scale(1.12); }
+}
+
+/* Clean spinner replaces WP's stock icon while the login request runs */
+body.login #wp-submit[disabled] {
+    background-image: none !important;
+    color: transparent !important;
+    position: relative;
+    pointer-events: none;
+}
+
+body.login #wp-submit[disabled]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: asl-spin 0.7s linear infinite;
+}
+
+@keyframes asl-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    body.login *,
+    body.login *::before,
+    body.login *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+    }
+}
+
+/* ========================================
+   ICON DETAILS
+   ======================================== */
+body.login #login_error {
+    position: relative;
+    padding-left: 46px;
+}
+
+body.login #login_error::before {
+    content: "";
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    margin-top: -9px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* Inline icons for the username + password fields (login form only) */
+body.login #loginform #user_login,
+body.login #loginform #user_pass {
+    padding-left: 42px;
+    background-repeat: no-repeat;
+    background-position: 13px center;
+    background-size: 17px 17px;
+}
+
+body.login #loginform #user_login {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
+}
+
+body.login #loginform #user_pass {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='11' x='3' y='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+}
+
+/* Visible keyboard focus on footer links */
+body.login #nav a:focus-visible,
+body.login #backtoblog a:focus-visible {
+    outline: 2px solid var(--asll-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+

@@ -1,0 +1,2082 @@
+/**
+ * Advanced Security Lite — Admin UI (plain, WordPress-native)
+ *
+ * Flat surfaces, 1px borders, core-blue accents, no gradients, shadows,
+ * blur, or animation. Every selector maps 1:1 to the existing markup in
+ * includes/admin-page.php. Presentation only — no behavior changes.
+ */
+
+/* ========================================
+   TOKENS
+   ======================================== */
+:root {
+    --asp-blue: #2271b1;
+    --asp-blue-hover: #135e96;
+    --asp-blue-light: #f0f6fc;
+
+    --success: #00a32a;
+    --success-dark: #00701a;
+    --success-light: #edfaef;
+    --warning: #dba617;
+    --warning-dark: #8a6116;
+    --warning-light: #fcf9e8;
+    --danger: #d63638;
+    --danger-dark: #b32d2e;
+    --danger-light: #fcf0f1;
+    --info: #2271b1;
+    --info-light: #f0f6fc;
+
+    --white: #ffffff;
+    --gray-0: #f6f7f7;
+    --gray-50: #f0f0f1;
+    --gray-100: #e2e4e7;
+    --gray-200: #dcdcde;
+    --gray-300: #c3c4c7;
+    --gray-400: #8c8f94;
+    --gray-500: #646970;
+    --gray-600: #50575e;
+    --gray-700: #3c434a;
+    --gray-800: #2c3338;
+    --gray-900: #1d2327;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+
+    --border: #dcdcde;
+    --border-light: #f0f0f1;
+
+    --transition: 120ms ease;
+}
+
+/* ========================================
+   BASE
+   ======================================== */
+.asl-wrap {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--gray-50);
+    min-height: 100vh;
+    color: var(--gray-900);
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.asl-wrap * {
+    box-sizing: border-box;
+}
+
+.asl-wrap h1,
+.asl-wrap h2,
+.asl-wrap h3,
+.asl-wrap h4,
+.asl-wrap h5 {
+    letter-spacing: -0.01em;
+}
+
+.asl-wrap :is(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--asp-blue);
+    outline-offset: 1px;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.asl-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.asl-header-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.asl-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.asl-brand-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--asp-blue);
+    background: var(--asp-blue-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.asl-brand-icon i {
+    font-size: 20px;
+    color: var(--asp-blue);
+}
+
+.asl-brand-text {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.asl-brand-text h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.asl-version {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gray-500);
+    background: var(--gray-0);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: var(--radius-sm);
+    flex: 0 0 auto;
+}
+
+.asl-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-shrink: 0;
+}
+
+/* Status badge */
+.asl-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 5px 12px 5px 8px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.asl-status-protected {
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-color: #b8e6bf;
+}
+
+.asl-status-partial {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+    border-color: #f0e2a8;
+}
+
+.asl-status-unprotected {
+    background: var(--danger-light);
+    color: var(--danger-dark);
+    border-color: #f5c4c5;
+}
+
+.asl-status-dot {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 50%;
+    color: #fff;
+}
+
+.asl-status-protected .asl-status-dot {
+    background: var(--success);
+}
+
+.asl-status-partial .asl-status-dot {
+    background: var(--warning);
+}
+
+.asl-status-unprotected .asl-status-dot {
+    background: var(--danger);
+}
+
+/* ========================================
+   TABS — WordPress subnav style
+   ======================================== */
+.asl-tabs {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 var(--space-6);
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+}
+
+.asl-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.asl-tabs::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 2px;
+}
+
+.asl-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--gray-500);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color var(--transition), border-color var(--transition);
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.asl-tab:hover {
+    color: var(--gray-900);
+}
+
+.asl-tab.active {
+    color: var(--asp-blue);
+    border-bottom-color: var(--asp-blue);
+}
+
+.asl-tab-icon {
+    font-size: 15px;
+    display: inline-flex;
+    line-height: 1;
+}
+
+/* ========================================
+   MAIN
+   ======================================== */
+.asl-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--space-6);
+}
+
+.asl-panel {
+    display: none;
+}
+
+.asl-panel.active {
+    display: block;
+}
+
+/* ========================================
+   STATS
+   ======================================== */
+.asl-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.asl-stat-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.asl-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+}
+
+.asl-icon-primary {
+    background: var(--asp-blue-light);
+    color: var(--asp-blue);
+    border-color: #c5d9ed;
+}
+
+.asl-icon-success {
+    background: var(--success-light);
+    color: var(--success);
+    border-color: #b8e6bf;
+}
+
+.asl-icon-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+    border-color: #f0e2a8;
+}
+
+.asl-icon-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: #f5c4c5;
+}
+
+.asl-stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.asl-stat-number {
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+}
+
+.asl-stat-label {
+    font-size: 12.5px;
+    color: var(--gray-500);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+.asl-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+    overflow: hidden;
+}
+
+.asl-card-header {
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.asl-card-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 2px 0;
+    display: flex;
+    align-items: center;
+}
+
+.asl-card-header p {
+    font-size: 12.5px;
+    color: var(--gray-500);
+    margin: 0;
+    line-height: 1.55;
+}
+
+.asl-card-header p a {
+    color: var(--asp-blue);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.asl-card-header p a:hover {
+    text-decoration: underline;
+}
+
+.asl-card-body {
+    padding: var(--space-5);
+}
+
+/* Info variant */
+.asl-card-info {
+    border-color: #c5d9ed;
+    background: var(--info-light);
+}
+
+.asl-card-info .asl-card-header {
+    border-bottom-color: #d5e4f2;
+}
+
+.asl-card-info h3 {
+    color: #1d4f7c;
+}
+
+/* ========================================
+   OPTIONS
+   ======================================== */
+.asl-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.asl-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.asl-option:hover {
+    background: var(--gray-0);
+    border-color: var(--gray-300);
+}
+
+.asl-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.asl-option-info strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1px;
+}
+
+.asl-option-info span {
+    font-size: 12.5px;
+    color: var(--gray-500);
+    line-height: 1.5;
+}
+
+.asl-option-select {
+    cursor: default;
+    flex-wrap: wrap;
+}
+
+.asl-option-select:hover {
+    background: var(--white);
+    border-color: var(--border);
+}
+
+/* ========================================
+   SWITCH
+   ======================================== */
+.asl-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.asl-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.asl-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--gray-300);
+    border-radius: 999px;
+    transition: background var(--transition);
+}
+
+.asl-switch-slider::before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    top: 3px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.asl-switch input:checked + .asl-switch-slider {
+    background: var(--asp-blue);
+}
+
+.asl-switch input:checked + .asl-switch-slider::before {
+    transform: translateX(18px);
+}
+
+.asl-switch input:focus-visible + .asl-switch-slider {
+    box-shadow: 0 0 0 2px var(--asp-blue-light), 0 0 0 3.5px var(--asp-blue);
+}
+
+.asl-switch:hover .asl-switch-slider {
+    background: var(--gray-400);
+}
+
+.asl-switch:hover input:checked + .asl-switch-slider {
+    background: var(--asp-blue-hover);
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.asl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1px solid var(--asp-blue);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--asp-blue);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+    text-decoration: none;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.asl-btn:hover {
+    background: var(--asp-blue-light);
+}
+
+.asl-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.asl-btn-primary {
+    background: var(--asp-blue);
+    color: var(--white);
+}
+
+.asl-btn-primary:hover {
+    background: var(--asp-blue-hover);
+    border-color: var(--asp-blue-hover);
+    color: var(--white);
+}
+
+.asl-btn-outline {
+    background: var(--white);
+    color: var(--gray-700);
+    border-color: var(--gray-300);
+}
+
+.asl-btn-outline:hover {
+    background: var(--gray-0);
+    border-color: var(--gray-400);
+    color: var(--gray-800);
+}
+
+.asl-btn-secondary {
+    background: var(--gray-0);
+    color: var(--gray-700);
+    border-color: var(--gray-300);
+}
+
+.asl-btn-secondary:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.asl-btn-danger {
+    background: var(--danger);
+    color: var(--white);
+    border-color: var(--danger);
+}
+
+.asl-btn-danger:hover {
+    background: var(--danger-dark);
+    border-color: var(--danger-dark);
+    color: var(--white);
+}
+
+/* Armed state: two-click confirmation for destructive actions */
+.asl-btn.asl-armed {
+    background: var(--gray-900);
+    border-color: var(--gray-900);
+    color: var(--white);
+}
+
+.asl-btn-lg {
+    padding: 10px 22px;
+    font-size: 14px;
+}
+
+.asl-btn-sm {
+    padding: 4px 11px;
+    font-size: 12px;
+}
+
+.asl-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+/* ========================================
+   FORMS
+   ======================================== */
+.asl-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    background: var(--gray-0);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+.asl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.asl-form-group label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.asl-input,
+.asl-select {
+    width: 100%;
+    padding: 8px var(--space-3);
+    font-size: 13.5px;
+    font-family: inherit;
+    border: 1px solid var(--gray-400);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    color: var(--gray-900);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.asl-input::placeholder {
+    color: var(--gray-400);
+}
+
+.asl-input:focus,
+.asl-select:focus {
+    outline: none;
+    border-color: var(--asp-blue);
+    box-shadow: 0 0 0 1px var(--asp-blue);
+}
+
+.asl-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2350575e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.asl-input[rows] {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* ========================================
+   RECOMMENDATIONS
+   ======================================== */
+.asl-rec-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-top: var(--space-5);
+}
+
+.asl-rec-card h4 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-rec-card h4 i {
+    font-size: 17px;
+    color: var(--asp-blue);
+}
+
+.asl-rec-body {}
+
+.asl-rec-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.asl-rec-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.asl-rec-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* Checklist variant */
+.asl-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.asl-checklist li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.asl-checklist li span {
+    flex: 1;
+    min-width: 200px;
+}
+
+.asl-check-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    border-radius: 50%;
+}
+
+.asl-check-icon i {
+    font-size: 16px;
+}
+
+.asl-check-warning .asl-check-icon {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.asl-check-warning {
+    border-left: 3px solid var(--warning);
+}
+
+.asl-check-success .asl-check-icon {
+    color: var(--success);
+    background: var(--success-light);
+}
+
+.asl-check-success {
+    border-left: 3px solid var(--success);
+}
+
+.asl-rec-list li span:not(.asl-check-icon) {
+    flex: 1;
+    min-width: 180px;
+}
+
+.asl-rec-link {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--asp-blue);
+    text-decoration: none;
+    padding: 4px 12px;
+    background: var(--white);
+    border: 1px solid var(--asp-blue);
+    border-radius: var(--radius-md);
+    transition: background var(--transition), color var(--transition);
+    white-space: nowrap;
+}
+
+.asl-rec-link:hover {
+    background: var(--asp-blue);
+    color: var(--white);
+}
+
+/* Summary */
+.asl-rec-summary {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--warning-light);
+    border: 1px solid #f0e2a8;
+    border-left-width: 3px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--warning-dark);
+}
+
+.asl-rec-summary p {
+    margin: 0;
+}
+
+.asl-rec-summary strong {
+    color: var(--warning-dark);
+}
+
+/* ========================================
+   DASHBOARD SECTIONS
+   ======================================== */
+.asl-dash-grid {
+    display: block;
+}
+
+.asl-dash-grid .asl-security-score-card {
+    margin-bottom: var(--space-5);
+}
+
+.asl-dash-grid .asl-rec-card {
+    margin-top: 0;
+}
+
+/* ========================================
+   SECURITY SCORE
+   ======================================== */
+.asl-security-score-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-6);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-5);
+}
+
+.asl-score-circle {
+    flex-shrink: 0;
+    width: 110px;
+    height: 110px;
+    min-width: 110px;
+    max-width: 110px;
+    min-height: 110px;
+    max-height: 110px;
+    overflow: hidden;
+}
+
+.asl-circular-chart {
+    display: block;
+    width: 110px;
+    height: 110px;
+    max-width: 110px;
+    max-height: 110px;
+}
+
+.asl-circle-bg {
+    fill: none;
+    stroke: var(--gray-100);
+    stroke-width: 3.4;
+}
+
+.asl-circle-progress {
+    fill: none;
+    stroke: var(--asp-blue);
+    stroke-width: 3.4;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 0.6s ease, stroke 0.2s ease;
+}
+
+.asl-score-percentage {
+    fill: var(--gray-900);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.5em;
+    font-weight: 700;
+    text-anchor: middle;
+    font-variant-numeric: tabular-nums;
+}
+
+.asl-score-info h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.asl-score-label {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: var(--radius-md);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-3);
+    border: 1px solid transparent;
+}
+
+.asl-score-details {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--gray-600);
+}
+
+.asl-score-details strong {
+    color: var(--gray-900);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Score variants */
+.asl-score-excellent .asl-circle-progress {
+    stroke: var(--success);
+}
+
+.asl-score-excellent .asl-score-label {
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-color: #b8e6bf;
+}
+
+.asl-score-good .asl-circle-progress {
+    stroke: var(--success);
+}
+
+.asl-score-good .asl-score-label {
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-color: #b8e6bf;
+}
+
+.asl-score-fair .asl-circle-progress {
+    stroke: var(--warning);
+}
+
+.asl-score-fair .asl-score-label {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+    border-color: #f0e2a8;
+}
+
+.asl-score-poor .asl-circle-progress {
+    stroke: var(--danger);
+}
+
+.asl-score-poor .asl-score-label {
+    background: var(--danger-light);
+    color: var(--danger-dark);
+    border-color: #f5c4c5;
+}
+
+/* ========================================
+   SAVE BAR
+   ======================================== */
+.asl-save-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: var(--space-6);
+    padding: var(--space-4) 0;
+    background: var(--gray-50);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.asl-save-bar .asl-btn-primary {
+    min-width: 180px;
+}
+
+.asl-save-status {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--success);
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+.asl-footer {
+    text-align: center;
+    padding: var(--space-6);
+    color: var(--gray-400);
+    font-size: 12.5px;
+}
+
+.asl-footer p {
+    margin: 0;
+}
+
+/* ========================================
+   ABOUT
+   ======================================== */
+.asl-about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+}
+
+.asl-about-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.asl-info-table tr {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.asl-info-table tr:last-child {
+    border-bottom: none;
+}
+
+.asl-info-table td {
+    padding: var(--space-3) var(--space-2);
+    font-size: 13px;
+}
+
+.asl-info-table td:first-child {
+    color: var(--gray-500);
+    width: 42%;
+}
+
+.asl-info-table td:last-child {
+    color: var(--gray-900);
+    font-weight: 500;
+}
+
+.asl-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.asl-feature-list li {
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+/* ========================================
+   DEVELOPER INFO
+   ======================================== */
+.asl-dev-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.asl-dev-logo {
+    text-align: center;
+    padding: var(--space-6) 0;
+}
+
+.asl-dev-icon {
+    font-size: 48px;
+    margin-bottom: var(--space-3);
+    color: var(--asp-blue);
+}
+
+.asl-dev-logo h4 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.asl-dev-details p {
+    margin: 0 0 var(--space-3) 0;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+.asl-dev-support {
+    background: var(--gray-0);
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+}
+
+.asl-dev-support h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.asl-dev-support p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+/* Compact developer card (v1) */
+.asl-dev-compact {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.asl-dev-compact .asl-dev-logo {
+    padding: 0;
+    margin-right: var(--space-5);
+    font-size: 28px;
+    text-align: left;
+    color: var(--asp-blue);
+}
+
+.asl-dev-compact .asl-dev-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.asl-dev-compact .asl-dev-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: var(--gray-900);
+    font-weight: 600;
+}
+
+.asl-dev-compact .asl-dev-details p {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--gray-500);
+    font-size: 13px;
+}
+
+.asl-dev-compact .asl-dev-links {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.asl-dev-compact .asl-link,
+.asl-dev-compact-v2 .asl-link {
+    color: var(--asp-blue);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.asl-dev-compact .asl-link:hover,
+.asl-dev-compact-v2 .asl-link:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-compact .asl-dev-actions {
+    margin-left: var(--space-5);
+}
+
+/* Compact developer card (v2 — current markup) */
+.asl-dev-compact-v2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    background: var(--white);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-logo {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--asp-blue);
+    background: var(--asp-blue-light);
+    border: 1px solid #c5d9ed;
+    border-radius: var(--radius-md);
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-details h4 {
+    margin: 0 0 2px 0;
+    font-size: 15.5px;
+    color: var(--gray-900);
+    font-weight: 600;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-name-v2 {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--gray-500);
+    font-size: 13px;
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-links-v2 {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.asl-dev-compact-v2 .asl-dev-compact-actions {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Legacy enhanced developer layout */
+.asl-dev-info-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.asl-dev-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    background: var(--asp-blue-light);
+    border: 1px solid #c5d9ed;
+    border-radius: var(--radius-lg);
+    color: var(--gray-900);
+}
+
+.asl-dev-icon-large {
+    font-size: 56px;
+    line-height: 1;
+    color: var(--asp-blue);
+}
+
+.asl-dev-title h4 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 var(--space-2) 0;
+    color: var(--gray-900);
+}
+
+.asl-dev-website {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--asp-blue);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.asl-dev-website:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+}
+
+.asl-dev-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+}
+
+.asl-dev-card-icon {
+    font-size: 32px;
+    margin-bottom: var(--space-3);
+    color: var(--asp-blue);
+}
+
+.asl-dev-card h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 var(--space-4) 0;
+}
+
+.asl-dev-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.asl-dev-list li {
+    padding: var(--space-2) 0;
+    font-size: 13px;
+    color: var(--gray-600);
+    line-height: 1.6;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.asl-dev-list li:last-child {
+    border-bottom: none;
+}
+
+.asl-dev-list a {
+    color: var(--asp-blue);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.asl-dev-list a:hover {
+    text-decoration: underline;
+}
+
+.asl-dev-card-support {
+    background: var(--asp-blue-light);
+    border-color: #c5d9ed;
+}
+
+.asl-dev-card-support h5 {
+    color: var(--gray-900);
+}
+
+.asl-dev-card-support p {
+    color: var(--gray-600);
+    margin-bottom: var(--space-4);
+}
+
+.asl-dev-card-support .asl-btn-secondary {
+    background: var(--white);
+    color: var(--asp-blue);
+    border-color: var(--asp-blue);
+}
+
+.asl-dev-card-support .asl-btn-secondary:hover {
+    background: var(--asp-blue-light);
+}
+
+/* Compatibility grid */
+.asl-compat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+}
+
+.asl-compat-item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.asl-compat-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid #b8e6bf;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.asl-compat-item strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: var(--space-1);
+}
+
+.asl-compat-item p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--gray-500);
+    line-height: 1.55;
+}
+
+/* ========================================
+   BADGES
+   ======================================== */
+.asl-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px 9px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid transparent;
+}
+
+.asl-badge-success {
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-color: #b8e6bf;
+}
+
+.asl-badge-warning {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+    border-color: #f0e2a8;
+}
+
+.asl-badge-danger {
+    background: var(--danger-light);
+    color: var(--danger-dark);
+    border-color: #f5c4c5;
+}
+
+/* ========================================
+   ACTIVITY LOG
+   ======================================== */
+.asl-log-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-4);
+}
+
+.asl-log-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-size: 13px;
+    color: var(--gray-500);
+    flex: 1;
+    min-width: 200px;
+}
+
+.asl-log-info i {
+    color: var(--info);
+    flex-shrink: 0;
+    font-size: 15px;
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+.asl-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.asl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.asl-table thead {
+    background: var(--gray-0);
+}
+
+.asl-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+}
+
+.asl-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+    color: var(--gray-700);
+    vertical-align: middle;
+}
+
+.asl-table tbody tr:hover {
+    background: var(--gray-0);
+}
+
+.asl-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.asl-table code {
+    background: var(--gray-0);
+    border: 1px solid var(--border-light);
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'SF Mono', ui-monospace, Monaco, 'Consolas', monospace;
+    color: var(--gray-800);
+}
+
+.asl-browser-cell,
+.asl-page-cell {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.asl-empty-state {
+    text-align: center;
+    padding: var(--space-12) var(--space-6);
+}
+
+.asl-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: var(--gray-400);
+    background: var(--gray-0);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+}
+
+.asl-empty-icon i {
+    color: var(--gray-400);
+    font-size: 30px;
+}
+
+.asl-empty-state h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.asl-empty-state p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin: 0 auto;
+    max-width: 420px;
+}
+
+/* ========================================
+   ICONS (Phosphor) — colorful, per-context
+   ======================================== */
+.ph {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+.asl-brand-icon i,
+.asl-stat-icon i,
+.asl-empty-icon i {
+    color: inherit;
+}
+
+.asl-header-right .asl-btn i {
+    color: inherit;
+    font-size: 1.05em;
+}
+
+.asl-stat-icon i {
+    color: inherit;
+}
+
+.asl-status-protected i,
+.asl-status-partial i,
+.asl-status-unprotected i {
+    color: #fff;
+}
+
+/* Card header icons render as small tinted chips */
+.asl-card-header h3 i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-right: var(--space-3);
+    font-size: 15px;
+    border-radius: var(--radius-md);
+    background: var(--asp-blue-light);
+    color: var(--asp-blue);
+    flex-shrink: 0;
+}
+
+/* Tab icons — one color per section */
+.asl-tab-icon i {
+    color: var(--gray-400);
+    transition: color var(--transition);
+}
+
+.asl-tab:hover .asl-tab-icon i {
+    color: var(--gray-600);
+}
+
+.asl-tab[data-tab="dashboard"] .asl-tab-icon i {
+    color: var(--asp-blue);
+}
+
+.asl-tab[data-tab="general"] .asl-tab-icon i {
+    color: var(--gray-500);
+}
+
+.asl-tab[data-tab="authentication"] .asl-tab-icon i {
+    color: var(--success);
+}
+
+.asl-tab[data-tab="firewall"] .asl-tab-icon i {
+    color: var(--danger);
+}
+
+.asl-tab[data-tab="hardening"] .asl-tab-icon i {
+    color: #0f766e;
+}
+
+.asl-tab[data-tab="tools"] .asl-tab-icon i {
+    color: var(--warning);
+}
+
+.asl-tab[data-tab="activity"] .asl-tab-icon i {
+    color: #0284c7;
+}
+
+.asl-tab[data-tab="status"] .asl-tab-icon i {
+    color: var(--success);
+}
+
+.asl-tab[data-tab="settings"] .asl-tab-icon i {
+    color: var(--gray-500);
+}
+
+.asl-tab[data-tab="about"] .asl-tab-icon i {
+    color: #dd7796;
+}
+
+.asl-tab.active .asl-tab-icon i {
+    color: inherit;
+    filter: saturate(1.3) brightness(0.82);
+}
+
+/* Card header icon colors — flat tinted chips, one hue per topic */
+.asl-card-header h3 .ph-globe {
+    color: var(--asp-blue);
+    background: var(--asp-blue-light);
+}
+
+.asl-card-header h3 .ph-key {
+    color: var(--success);
+    background: var(--success-light);
+}
+
+.asl-card-header h3 .ph-robot {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.asl-card-header h3 .ph-lock-key {
+    color: var(--success);
+    background: var(--success-light);
+}
+
+.asl-card-header h3 .ph-funnel {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+
+.asl-card-header h3 .ph-upload-simple {
+    color: #d97706;
+    background: #fdf3e3;
+}
+
+.asl-card-header h3 .ph-eye-slash {
+    color: #0f766e;
+    background: #e6f4f1;
+}
+
+.asl-card-header h3 .ph-pencil-simple-line {
+    color: #0f766e;
+    background: #e6f4f1;
+}
+
+.asl-card-header h3 .ph-file-lock {
+    color: #0f766e;
+    background: #e6f4f1;
+}
+
+.asl-card-header h3 .ph-wrench {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.asl-card-header h3 .ph-plug {
+    color: #0284c7;
+    background: #e0f2fe;
+}
+
+.asl-card-header h3 .ph-shield-warning {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+
+.asl-card-header h3 .ph-clipboard-text {
+    color: #0284c7;
+    background: #e0f2fe;
+}
+
+.asl-card-header h3 .ph-sliders-horizontal {
+    color: var(--gray-600);
+    background: var(--gray-0);
+}
+
+.asl-card-header h3 .ph-sparkle {
+    color: var(--asp-blue);
+    background: var(--asp-blue-light);
+}
+
+.asl-card-header h3 .ph-user {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+
+.asl-card-header h3 .ph-heart {
+    color: #dd7796;
+    background: #fdf0f4;
+}
+
+/* Misc icon accents */
+.asl-rec-card h4 i {
+    color: var(--asp-blue);
+}
+
+.asl-log-info i {
+    color: var(--info);
+}
+
+/* ========================================
+   STATUS TAB
+   ======================================== */
+.asl-card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.asl-card-header-row .asl-card-header-text {
+    min-width: 0;
+}
+
+.asl-status-line {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.asl-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.asl-dot-ok {
+    background: var(--success);
+}
+
+.asl-dot-warn {
+    background: var(--warning);
+}
+
+.asl-dot-bad {
+    background: var(--danger);
+}
+
+.asl-ext-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-2);
+}
+
+.asl-ext {
+    display: flex;
+    align-items: center;
+    padding: 9px var(--space-3);
+    background: var(--gray-0);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    font-size: 12.5px;
+    font-family: 'SF Mono', ui-monospace, Monaco, 'Consolas', monospace;
+    color: var(--gray-700);
+}
+
+.asl-info-table code {
+    background: var(--gray-0);
+    border: 1px solid var(--border-light);
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'SF Mono', ui-monospace, Monaco, 'Consolas', monospace;
+    color: var(--gray-800);
+}
+
+.asl-credit-line {
+    margin: var(--space-4) 0 0;
+    font-size: 13px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.asl-credit-line a {
+    color: var(--asp-blue);
+}
+
+.asl-credit-line i {
+    font-size: 15px;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 900px) {
+    .asl-about-grid,
+    .asl-dev-grid,
+    .asl-compat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 782px) {
+    .asl-header {
+        flex-wrap: wrap;
+    }
+
+    .asl-header-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .asl-tab {
+        padding: var(--space-3);
+        font-size: 13px;
+    }
+
+    .asl-tab-icon {
+        display: none;
+    }
+
+    .asl-main {
+        padding: var(--space-4);
+    }
+
+    .asl-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .asl-option {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-3);
+    }
+
+    .asl-switch {
+        align-self: flex-end;
+        margin-top: calc(-1 * var(--space-7, 26px));
+    }
+
+    .asl-security-score-card {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-5);
+    }
+
+    .asl-score-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .asl-save-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .asl-save-bar .asl-btn-primary {
+        width: 100%;
+    }
+
+    .asl-btn-group {
+        flex-direction: column;
+    }
+
+    .asl-btn-group .asl-btn {
+        width: 100%;
+    }
+
+    .asl-dev-compact,
+    .asl-dev-compact-v2 {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .asl-dev-compact .asl-dev-actions,
+    .asl-dev-compact-v2 .asl-dev-compact-actions {
+        margin-left: 0;
+    }
+
+    .asl-dev-compact-v2 .asl-dev-compact-links-v2 {
+        justify-content: center;
+    }
+
+    .asl-log-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    .asl-wrap *,
+    .asl-wrap *::before,
+    .asl-wrap *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========================================
+   CUSTOM LOGIN DESIGN OPTIONS
+   ======================================== */
+.asl-login-design-options {
+    margin: 4px 0 8px;
+    padding: 16px 16px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.asl-login-design-options .asl-option,
+.asl-login-design-options .asl-form-group {
+    margin-top: 14px;
+}
+
+.asl-login-design-options .asl-option:first-child,
+.asl-login-design-options .asl-form-group:first-child {
+    margin-top: 0;
+}
+
+.asl-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.asl-color-row input[type="color"] {
+    width: 46px;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.asl-color-row input[type="color"]:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    outline: none;
+}
+
+.asl-color-hex {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1;
+    color: #475569;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.asl-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.asl-upload-row .asl-input {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.asl-field-hint {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #64748b;
+}
+

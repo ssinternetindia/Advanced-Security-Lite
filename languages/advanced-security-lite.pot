@@ -1,0 +1,339 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Advanced Security Lite 1.0.5\n"
+"Report-Msgid-Bugs-To: https://ssinternet.in/\n"
+"POT-Creation-Date: 2025-12-10 15:30+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WP-CLI 2.5.0\n"
+"X-Domain: advanced-security-lite\n"
+
+#: advanced-security-lite.php:135 includes/admin-page.php:15
+msgid "Advanced Security Lite"
+msgstr ""
+
+#: advanced-security-lite.php:136
+msgid "Security Lite"
+msgstr ""
+
+#: advanced-security-lite.php:38
+#, php-format
+msgid "Advanced Security Lite requires WordPress %s or higher. You are running version %s."
+msgstr ""
+
+#: advanced-security-lite.php:47
+#, php-format
+msgid "Advanced Security Lite requires PHP %s or higher. You are running version %s."
+msgstr ""
+
+#: advanced-security-lite.php:173
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: advanced-security-lite.php:224
+msgid "Daily"
+msgstr ""
+
+#: advanced-security-lite.php:228
+msgid "Weekly"
+msgstr ""
+
+#: advanced-security-lite.php:232
+msgid "Monthly"
+msgstr ""
+
+#: includes/admin-page.php:22
+msgid "Regenerate Salts"
+msgstr ""
+
+#: includes/admin-page.php:41
+msgid "Protected"
+msgstr ""
+
+#: includes/admin-page.php:45
+msgid "Partial"
+msgstr ""
+
+#: includes/admin-page.php:49
+msgid "Unprotected"
+msgstr ""
+
+#: includes/admin-page.php:64
+msgid "Dashboard"
+msgstr ""
+
+#: includes/admin-page.php:68
+msgid "General"
+msgstr ""
+
+#: includes/admin-page.php:72
+msgid "Authentication"
+msgstr ""
+
+#: includes/admin-page.php:76
+msgid "Firewall"
+msgstr ""
+
+#: includes/admin-page.php:80
+msgid "Hardening"
+msgstr ""
+
+#: includes/admin-page.php:84
+msgid "Tools"
+msgstr ""
+
+#: includes/admin-page.php:88
+msgid "Activity Log"
+msgstr ""
+
+#: includes/admin-page.php:92
+msgid "About"
+msgstr ""
+
+#: includes/admin-page.php:117
+msgid "Features Active"
+msgstr ""
+
+#: includes/admin-page.php:124
+msgid "On"
+msgstr ""
+
+#: includes/admin-page.php:124
+msgid "Off"
+msgstr ""
+
+#: includes/admin-page.php:125
+msgid "Auto Salt Regen"
+msgstr ""
+
+#: includes/admin-page.php:132
+msgid "Active"
+msgstr ""
+
+#: includes/admin-page.php:132
+msgid "Inactive"
+msgstr ""
+
+#: includes/admin-page.php:133
+msgid "reCAPTCHA"
+msgstr ""
+
+#: includes/admin-page.php:143
+msgid "Security Recommendations"
+msgstr ""
+
+#: includes/admin-page.php:150
+msgid "Enable automatic salt regeneration for better security"
+msgstr ""
+
+#: includes/admin-page.php:156
+msgid "Add reCAPTCHA protection to prevent bot attacks"
+msgstr ""
+
+#: includes/admin-page.php:161
+msgid "Keep WordPress and plugins updated regularly"
+msgstr ""
+
+#: includes/admin-page.php:165
+msgid "Use strong passwords and enable two-factor authentication"
+msgstr ""
+
+#: includes/admin-page.php:176
+msgid "WordPress Core Protection"
+msgstr ""
+
+#: includes/admin-page.php:177
+msgid "Disable unnecessary WordPress features that can be exploited."
+msgstr ""
+
+#: includes/admin-page.php:552
+msgid "Obfuscate Emails"
+msgstr ""
+
+#: includes/admin-page.php:553
+msgid "Encode email addresses to prevent scraping"
+msgstr ""
+
+#: includes/admin-page.php:569
+msgid "Site Tools"
+msgstr ""
+
+#: includes/admin-page.php:570
+msgid "Additional tools for managing your site security and access."
+msgstr ""
+
+#: includes/admin-page.php:577
+msgid "Maintenance Mode"
+msgstr ""
+
+#: includes/admin-page.php:578
+msgid "Show a maintenance page to non-logged-in visitors"
+msgstr ""
+
+#: includes/admin-page.php:588
+msgid "Maintenance Message"
+msgstr ""
+
+#: includes/admin-page.php:590
+msgid "Enter your maintenance message..."
+msgstr ""
+
+#: includes/admin-page.php:590
+msgid "We are currently performing scheduled maintenance. Please check back soon."
+msgstr ""
+
+#: includes/admin-page.php:595
+msgid "Limit Post Revisions"
+msgstr ""
+
+#: includes/admin-page.php:596
+msgid "Limit the number of post revisions to reduce database bloat"
+msgstr ""
+
+#: includes/admin-page.php:609
+msgid "Maximum Revisions"
+msgstr ""
+
+#: includes/admin-page.php:610
+msgid "Number of revisions to keep per post"
+msgstr ""
+
+#: includes/admin-page.php:631
+msgid "API & Authentication"
+msgstr ""
+
+#: includes/admin-page.php:632
+msgid "Control API access and authentication methods."
+msgstr ""
+
+#: includes/admin-page.php:638
+msgid "Disable Application Passwords"
+msgstr ""
+
+#: includes/admin-page.php:639
+msgid "Disable WordPress 5.6+ Application Passwords feature"
+msgstr ""
+
+#: includes/admin-page.php:649
+msgid "Disable Pingbacks & Trackbacks"
+msgstr ""
+
+#: includes/admin-page.php:650
+msgid "Completely disable pingback and trackback functionality"
+msgstr ""
+
+#: includes/admin-page.php:660
+msgid "Hide Admin Username"
+msgstr ""
+
+#: includes/admin-page.php:661
+msgid "Hide administrator usernames from author archives and displays"
+msgstr ""
+
+#: includes/admin-page.php:677
+msgid "Failed Login Attempts"
+msgstr ""
+
+#: includes/admin-page.php:678
+msgid "Recent failed login attempts detected on your site."
+msgstr ""
+
+#: includes/admin-page.php:710 includes/admin-page.php:760
+msgid "Date/Time"
+msgstr ""
+
+#: includes/admin-page.php:711
+msgid "Username"
+msgstr ""
+
+#: includes/admin-page.php:712 includes/admin-page.php:762
+msgid "IP Address"
+msgstr ""
+
+#: includes/admin-page.php:713
+msgid "Browser"
+msgstr ""
+
+#: includes/admin-page.php:734
+msgid "No Failed Login Attempts"
+msgstr ""
+
+#: includes/admin-page.php:735
+msgid "Great news! There are no failed login attempts recorded."
+msgstr ""
+
+#: includes/admin-page.php:744
+msgid "Admin Access Log"
+msgstr ""
+
+#: includes/admin-page.php:745
+msgid "Recent admin area access by authenticated users."
+msgstr ""
+
+#: includes/admin-page.php:761
+msgid "User"
+msgstr ""
+
+#: includes/admin-page.php:763
+msgid "Page"
+msgstr ""
+
+#: includes/security-features.php:164
+msgid "Feeds are disabled on this site."
+msgstr ""
+
+#: includes/security-features.php:191
+msgid "REST API is disabled for non-authenticated users."
+msgstr ""
+
+#: includes/security-features.php:281
+msgid "Forbidden request detected."
+msgstr ""
+
+#: includes/security-features.php:328
+msgid "Files with multiple extensions are not allowed."
+msgstr ""
+
+#: includes/security-features.php:336
+msgid "This file type is not allowed for security reasons."
+msgstr ""
+
+#: includes/security-features.php:367 includes/security-features.php:449
+msgid "Invalid login credentials."
+msgstr ""
+
+#: includes/security-features.php:550 includes/security-features.php:562
+msgid "Author"
+msgstr ""
+
+#: includes/security-features.php:601
+msgid "Maintenance"
+msgstr ""
+
+#: includes/security-features.php:650
+msgid "Under Maintenance"
+msgstr ""
+
+#: includes/recaptcha.php:191 includes/recaptcha.php:199 includes/recaptcha.php:207 includes/recaptcha.php:213
+msgid "reCAPTCHA verification failed. Please try again."
+msgstr ""
+
+#: includes/enhancements.php:71
+msgid "Too many failed login attempts. Please try again later."
+msgstr ""
+
+#: includes/enhancements.php:145
+msgid "Image file contains potentially malicious code."
+msgstr ""
+
+msgid "Credits"
+msgstr ""
+
+msgid "Icons provided by %s"
+msgstr ""
