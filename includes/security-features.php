@@ -202,6 +202,18 @@ class ASP_SecurityFeatures
         $path = rawurldecode($path);
         $path = '/' . trim($path, '/');
 
+        // Sites using the "Plain" permalink structure route REST requests as
+        // /index.php?rest_route=/wp/v2/media instead of /wp-json/wp/v2/media,
+        // so the URL path alone never matches. Normalize using rest_route
+        // when it is present so the allow-list below still works there.
+        if (isset($_GET['rest_route']) && is_string($_GET['rest_route']) && '' !== $_GET['rest_route']) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- raw value used only for path extraction
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only route resolution, no state change
+            $route = rawurldecode(wp_unslash($_GET['rest_route']));
+            $path = '/wp-json/' . ltrim($route, '/');
+            $path = '/' . trim($path, '/');
+        }
+
         // Allowed route prefixes (all start from /wp-json/).
         $allowed_prefixes = array(
             '/wp-json/wc',
@@ -266,6 +278,16 @@ class ASP_SecurityFeatures
         return $headers;
     }
 
+    /**
+     * Best-effort request filter: blocks a small denylist of obviously
+     * malicious query strings/URIs (path traversal, inline <script>,
+     * javascript:/vbscript: URIs, naive SQLi markers). This is a
+     * defense-in-depth layer, not a full WAF — it can be bypassed by
+     * encoding/formatting variations not covered by these patterns, and it
+     * can theoretically false-positive on legitimate requests that happen
+     * to contain one of these substrings. It complements, but does not
+     * replace, proper output escaping and $wpdb->prepare() used elsewhere.
+     */
     public function blockBadRequests()
     {
         // Skip blocking for admin area and AJAX requests
@@ -751,15 +773,12 @@ class ASP_SecurityFeatures
             return;
         }
 
-        // Allow access to login page
-        if (isset($_SERVER['REQUEST_URI']) && strpos(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), 'wp-login.php') !== false) {
-            return;
-        }
-
-        // Allow access to admin-ajax.php
-        if (isset($_SERVER['REQUEST_URI']) && strpos(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), 'admin-ajax.php') !== false) {
-            return;
-        }
+        // Note: wp-login.php and admin-ajax.php never reach this method in
+        // the first place — neither entry point loads the theme template
+        // system, so the 'template_redirect' hook this method is attached
+        // to never fires for them. No extra checks are needed to "allow"
+        // those URLs through; they are inherently unaffected by maintenance
+        // mode.
 
         // Get custom message
         $message = get_option('asp_maintenance_message', 'We are currently performing scheduled maintenance. Please check back soon.');

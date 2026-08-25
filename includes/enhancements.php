@@ -838,16 +838,36 @@ JS;
         add_filter('wp_kses_allowed_html', array($this, 'restrictAllowedHtml'), 10, 2);
     }
 
+    /**
+     * Best-effort, defense-in-depth attribute stripping for the_content /
+     * comment_text. This is a simple regex pass, not a full HTML parser —
+     * it complements (and does not replace) wp_kses()/capability-based
+     * sanitization already applied when content is saved. Users with the
+     * unfiltered_html capability, and any content that reaches these
+     * filters via a path other than the normal save flow, are the main
+     * cases where this extra layer adds value.
+     */
     public function enhancedXssProtection($content)
     {
-        // Remove potentially dangerous attributes
-        $content = preg_replace('/on\w+\s*=\s*["\'][^"\']*["\']/i', '', $content);
+        // Remove potentially dangerous attributes (quoted and unquoted values).
+        $content = preg_replace('/on\w+\s*=\s*"[^"]*"/i', '', $content);
+        $content = preg_replace("/on\\w+\\s*=\\s*'[^']*'/i", '', $content);
+        $content = preg_replace('/on\w+\s*=\s*[^\s"\'>]+/i', '', $content);
         $content = preg_replace('/javascript\s*:/i', '', $content);
         $content = preg_replace('/vbscript\s*:/i', '', $content);
 
         return $content;
     }
 
+    /**
+     * Defense-in-depth for the 'post' wp_kses context: these tags are not
+     * part of WordPress core's default post-context allow-list, so under
+     * default behavior this is a no-op. It matters if another plugin/theme
+     * (or a future WP core change) adds one of these tags to the allowed
+     * list for that context. Note this filter has no effect at all for
+     * users with the unfiltered_html capability, since wp_kses() is never
+     * invoked on their content in the first place.
+     */
     public function restrictAllowedHtml($allowed, $context)
     {
         if ($context === 'post') {

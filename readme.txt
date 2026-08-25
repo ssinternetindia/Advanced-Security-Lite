@@ -131,7 +131,7 @@ Fixed
 Changed
 * Clean, flat WordPress-native admin UI with color-coded Phosphor icons, sidebar navigation, and a live Security Score.
 * Plugin no longer forces DISALLOW_FILE_EDIT / DISALLOW_FILE_MODS regardless of settings; toggles behave as described.
-* Uninstall now reverts all .htaccess modifications, removes backup files, and correctly deletes pages containing the login shortcode.
+* Uninstall now reverts all .htaccess modifications and removes backup files.
 * .htaccess rules are written at most once per day instead of on every admin page load.
 * "Trust Proxy Headers" removed — visitor IPs always come from the direct connection.
 * Maintenance screen redesigned with a clean white layout and blue accent.

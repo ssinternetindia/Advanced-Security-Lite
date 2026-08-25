@@ -686,8 +686,8 @@ function asp_read_log_tail($path, $max = 262144)
  * Sources: the WP_DEBUG_LOG path (when set to a string), the PHP ini
  * error_log location, wp-content/debug.log, and any *.log files in the
  * wp-content root and the uploads root. Newest files first. Clients only
- * ever reference logs by numeric key into this server-computed list —
- * never by path.
+ * ever reference logs by a stable opaque key derived from the canonical path —
+ * never by path itself or by a reorderable array position.
  *
  * @return array[]
  */
@@ -736,6 +736,11 @@ function asp_discover_error_logs()
         clearstatcache(true, $real);
 
         $logs[$real] = array(
+            // Stable identifier derived from the real path — NOT the array
+            // position — so a client-held key still resolves to the same
+            // file even if a concurrent write reorders this list between
+            // the "list" call and a later view/clear/download call.
+            'key' => md5($real),
             'path' => $real,
             'name' => basename($real),
             'size' => (int) @filesize($real), // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
@@ -754,19 +759,26 @@ function asp_discover_error_logs()
 /**
  * Resolve a client-supplied log key to a server-discovered log entry.
  *
- * @param mixed $key Numeric key from the client.
+ * The key is the stable md5(realpath) computed in asp_discover_error_logs(),
+ * not an array position, so it keeps resolving to the same file even if the
+ * discovery list gets re-sorted by a concurrent write between requests.
+ *
+ * @param mixed $key Key from the client.
  * @return array|null
  */
 function asp_resolve_error_log($key)
 {
-    if (!is_numeric($key)) {
+    if (!is_string($key) || !preg_match('/^[a-f0-9]{32}$/', $key)) {
         return null;
     }
 
-    $logs = asp_discover_error_logs();
-    $index = (int) $key;
+    foreach (asp_discover_error_logs() as $log) {
+        if (hash_equals($log['key'], $key)) {
+            return $log;
+        }
+    }
 
-    return isset($logs[$index]) ? $logs[$index] : null;
+    return null;
 }
 
 /**
@@ -785,9 +797,9 @@ function asp_get_error_logs()
     }
 
     $logs = array();
-    foreach (asp_discover_error_logs() as $index => $log) {
+    foreach (asp_discover_error_logs() as $log) {
         $logs[] = array(
-            'key' => $index,
+            'key' => $log['key'],
             'name' => $log['name'],
             'path' => $log['path'],
             'size_human' => asp_size_human($log['size']),
@@ -802,7 +814,7 @@ function asp_get_error_logs()
 }
 
 /**
- * AJAX: return the tail of one log (by numeric key).
+ * AJAX: return the tail of one log (by stable opaque key).
  */
 function asp_read_error_log()
 {
@@ -835,7 +847,7 @@ function asp_read_error_log()
 }
 
 /**
- * AJAX: truncate one log file (by numeric key).
+ * AJAX: truncate one log file (by stable opaque key).
  */
 function asp_clear_error_log()
 {
@@ -872,7 +884,7 @@ function asp_clear_error_log()
 }
 
 /**
- * Stream one log file as a download (admin-post endpoint, by numeric key).
+ * Stream one log file as a download (admin-post endpoint, by stable opaque key).
  */
 function asp_download_error_log()
 {
@@ -1131,9 +1143,16 @@ function asp_regenerate_wp_config_salts()
     foreach ($salts as $salt) {
         $new_salt = wp_generate_password(64, true, true);
         $pattern = "/define\s*\(\s*['\"]" . preg_quote($salt, '/') . "['\"]\s*,\s*['\"][^'\"]*['\"]\s*\)\s*;/";
-        $config_content = preg_replace(
+        // preg_replace_callback (not preg_replace) is required here: $new_salt
+        // can legitimately contain a "$" followed by digits, and preg_replace()
+        // would misinterpret that sequence as a backreference (e.g. "$3"),
+        // silently corrupting the salt. A callback's return value is used
+        // verbatim, so the replacement text is never re-interpreted.
+        $config_content = preg_replace_callback(
             $pattern,
-            "define('" . $salt . "', '" . $new_salt . "');",
+            static function ($matches) use ($salt, $new_salt) {
+                return "define('" . $salt . "', '" . $new_salt . "');";
+            },
             $config_content,
             -1,
             $count
@@ -1269,6 +1288,8 @@ function asp_clear_all_logs()
         wp_send_json_error('Security check failed');
         return;
     }
+
+    global $wpdb;
 
     // Count what is being removed so the response proves the action ran.
     $failed_logins = (array) get_option('asp_failed_logins', array());

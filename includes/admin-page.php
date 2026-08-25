@@ -1455,13 +1455,6 @@ if (!defined('ABSPATH')) {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><strong><?php esc_html_e('Status', 'advanced-security-lite'); ?></strong>
-                                        </td>
-                                        <td><span
-                                                class="asl-badge asl-badge-success"><?php esc_html_e('Active', 'advanced-security-lite'); ?></span>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td><strong><?php esc_html_e('Server & PHP Details', 'advanced-security-lite'); ?></strong>
                                         </td>
                                         <td><a href="#status" class="asl-rec-link"
