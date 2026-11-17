@@ -57,86 +57,171 @@ if (!defined('ABSPATH')) {
         </div>
     </header>
 
-    <!-- Horizontal Tab Navigation -->
-    <nav class="asl-tabs">
-        <button class="asl-tab active" data-tab="dashboard">
-            <span class="asl-tab-icon"><i class="ph ph-chart-bar"></i></span>
-            <?php esc_html_e('Dashboard', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="general">
-            <span class="asl-tab-icon"><i class="ph ph-gear"></i></span>
-            <?php esc_html_e('General', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="authentication">
-            <span class="asl-tab-icon"><i class="ph ph-lock-key"></i></span>
-            <?php esc_html_e('Authentication', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="firewall">
-            <span class="asl-tab-icon"><i class="ph ph-wall"></i></span>
-            <?php esc_html_e('Firewall', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="hardening">
-            <span class="asl-tab-icon"><i class="ph ph-shield"></i></span>
-            <?php esc_html_e('Hardening', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="tools">
-            <span class="asl-tab-icon"><i class="ph ph-wrench"></i></span>
-            <?php esc_html_e('Tools', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="activity">
-            <span class="asl-tab-icon"><i class="ph ph-list-dashes"></i></span>
-            <?php esc_html_e('Activity Log', 'advanced-security-lite'); ?>
-        </button>
-        <button class="asl-tab" data-tab="settings">
-            <span class="asl-tab-icon"><i class="ph ph-sliders"></i></span>
-            <?php esc_html_e('Settings', 'advanced-security-lite'); ?>
-        </button>
-            <button class="asl-tab" data-tab="status">
-                <span class="asl-tab-icon"><i class="ph ph-pulse"></i></span>
-                <?php esc_html_e('Status', 'advanced-security-lite'); ?>
-            </button>
-            <button class="asl-tab" data-tab="about">
-            <span class="asl-tab-icon"><i class="ph ph-info"></i></span>
-            <?php esc_html_e('About', 'advanced-security-lite'); ?>
-        </button>
-    </nav>
+    <!-- Body Shell: Left Sidebar + Main Content -->
+    <div class="asl-shell">
+        <aside class="asl-sidebar" aria-label="<?php esc_attr_e('Plugin Navigation', 'advanced-security-lite'); ?>">
+            <div class="asl-sidebar-search">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="search" id="asl-settings-search"
+                    placeholder="<?php esc_attr_e('Search settings...', 'advanced-security-lite'); ?>"
+                    aria-label="<?php esc_attr_e('Search settings', 'advanced-security-lite'); ?>">
+            </div>
 
-    <!-- Main Content Area -->
-    <main class="asl-main">
-        <form id="asl-settings-form" method="post">
+            <nav class="asl-tabs">
+                <div class="asl-nav-group">
+                    <span class="asl-nav-label"><?php esc_html_e('Overview', 'advanced-security-lite'); ?></span>
+                    <button type="button" class="asl-tab active" data-tab="dashboard">
+                        <span class="asl-tab-icon"><i class="ph ph-chart-bar"></i></span>
+                        <?php esc_html_e('Dashboard', 'advanced-security-lite'); ?>
+                    </button>
+                </div>
+
+                <div class="asl-nav-group">
+                    <span class="asl-nav-label"><?php esc_html_e('Protection', 'advanced-security-lite'); ?></span>
+                    <button type="button" class="asl-tab" data-tab="general">
+                        <span class="asl-tab-icon"><i class="ph ph-gear"></i></span>
+                        <?php esc_html_e('General', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="authentication">
+                        <span class="asl-tab-icon"><i class="ph ph-lock-key"></i></span>
+                        <?php esc_html_e('Authentication', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="firewall">
+                        <span class="asl-tab-icon"><i class="ph ph-wall"></i></span>
+                        <?php esc_html_e('Firewall', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="hardening">
+                        <span class="asl-tab-icon"><i class="ph ph-shield"></i></span>
+                        <?php esc_html_e('Hardening', 'advanced-security-lite'); ?>
+                    </button>
+                </div>
+
+                <div class="asl-nav-group">
+                    <span class="asl-nav-label"><?php esc_html_e('Monitoring', 'advanced-security-lite'); ?></span>
+                    <button type="button" class="asl-tab" data-tab="activity">
+                        <span class="asl-tab-icon"><i class="ph ph-list-dashes"></i></span>
+                        <?php esc_html_e('Activity Log', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="status">
+                        <span class="asl-tab-icon"><i class="ph ph-pulse"></i></span>
+                        <?php esc_html_e('Status', 'advanced-security-lite'); ?>
+                    </button>
+                </div>
+
+                <div class="asl-nav-group">
+                    <span class="asl-nav-label"><?php esc_html_e('System', 'advanced-security-lite'); ?></span>
+                    <button type="button" class="asl-tab" data-tab="tools">
+                        <span class="asl-tab-icon"><i class="ph ph-wrench"></i></span>
+                        <?php esc_html_e('Tools', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="settings">
+                        <span class="asl-tab-icon"><i class="ph ph-sliders"></i></span>
+                        <?php esc_html_e('Settings', 'advanced-security-lite'); ?>
+                    </button>
+                    <button type="button" class="asl-tab" data-tab="about">
+                        <span class="asl-tab-icon"><i class="ph ph-info"></i></span>
+                        <?php esc_html_e('About', 'advanced-security-lite'); ?>
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="asl-main">
+            <div id="asl-search-results" class="asl-search-results" hidden>
+                <div class="asl-card">
+                    <div class="asl-card-header asl-card-header-row">
+                        <div class="asl-card-header-text">
+                            <h3><i class="ph ph-magnifying-glass"></i> <?php esc_html_e('Search Results', 'advanced-security-lite'); ?></h3>
+                            <p id="asl-search-summary"></p>
+                        </div>
+                        <button type="button" id="asl-search-clear" class="asl-btn asl-btn-secondary asl-btn-sm">
+                            <?php esc_html_e('Clear Search', 'advanced-security-lite'); ?>
+                        </button>
+                    </div>
+                    <div class="asl-card-body">
+                        <div id="asl-search-list" class="asl-search-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="asl-settings-form" method="post">
 
             <!-- Dashboard Panel -->
             <div id="panel-dashboard" class="asl-panel active">
                 <?php
-                // Calculate Security Score based on all key security features
-                $security_features = array(
-                    // General
+                // Category breakdowns for Bento score card
+                $cat_core = array(
                     get_option('asp_disable_wp_json', 0),
                     get_option('asp_disable_xmlrpc', 0),
                     get_option('asp_disable_rest_api', 0),
                     get_option('asp_auto_regenerate_salts', 0),
-                    // Authentication
+                );
+                $cat_auth = array(
                     get_option('asp_recaptcha_v2_enabled', 0) || get_option('asp_recaptcha_v3_enabled', 0) || get_option('asp_image_captcha_enabled', 0),
                     get_option('asp_hide_login_errors', 0),
-                    // Firewall
+                    get_option('asp_disable_app_passwords', 0),
+                );
+                $cat_firewall = array(
                     get_option('asp_disallow_bad_requests', 0),
                     get_option('asp_prevent_user_enumeration', 0),
                     get_option('asp_disallow_malicious_uploads', 0),
-                    // Hardening
+                );
+                $cat_hardening = array(
                     get_option('asp_hide_wp_version', 0),
                     get_option('asp_hide_php_version', 0),
                     get_option('asp_disallow_file_edit', 0),
                     get_option('asp_protect_headers', 0),
                     get_option('asp_obfuscate_author_slugs', 0),
-                    // File Protection
                     get_option('asp_disable_php_execution', 0),
                     get_option('asp_protect_sensitive_files', 0),
-                    // Tools
-                    get_option('asp_disable_app_passwords', 0),
                 );
+
+                $security_features = array_merge($cat_core, $cat_auth, $cat_firewall, $cat_hardening);
                 $total_features = count($security_features);
                 $enabled_count = count(array_filter($security_features));
                 $security_score = round(($enabled_count / $total_features) * 100);
+
+                $cat_bars = array(
+                    array('label' => __('Core', 'advanced-security-lite'), 'done' => count(array_filter($cat_core)), 'total' => count($cat_core)),
+                    array('label' => __('Auth', 'advanced-security-lite'), 'done' => count(array_filter($cat_auth)), 'total' => count($cat_auth)),
+                    array('label' => __('Firewall', 'advanced-security-lite'), 'done' => count(array_filter($cat_firewall)), 'total' => count($cat_firewall)),
+                    array('label' => __('Hardening', 'advanced-security-lite'), 'done' => count(array_filter($cat_hardening)), 'total' => count($cat_hardening)),
+                );
+
+                // Count failed logins in the last 3 days
+                $dash_failed = (array) get_option('asp_failed_logins', array());
+                $dash_failed_count = 0;
+                $dash_recent_events = array();
+                foreach ($dash_failed as $f_ip => $f_attempts) {
+                    if (!is_array($f_attempts)) {
+                        continue;
+                    }
+                    $dash_failed_count += count($f_attempts);
+                    foreach ($f_attempts as $fa) {
+                        $dash_recent_events[] = array(
+                            'type' => __('Failed Login', 'advanced-security-lite'),
+                            'who' => isset($fa['username']) ? $fa['username'] : '',
+                            'ip' => $f_ip,
+                            'time' => isset($fa['time']) ? (int) $fa['time'] : 0,
+                            'kind' => 'warn',
+                        );
+                    }
+                }
+                $dash_admin_log = (array) get_option('asp_admin_access_log', array());
+                foreach (array_slice($dash_admin_log, -10) as $al) {
+                    $dash_recent_events[] = array(
+                        'type' => __('Admin Access', 'advanced-security-lite'),
+                        'who' => isset($al['username']) ? $al['username'] : '',
+                        'ip' => isset($al['ip']) ? $al['ip'] : '',
+                        'time' => isset($al['time']) ? (int) $al['time'] : 0,
+                        'kind' => 'ok',
+                    );
+                }
+                usort($dash_recent_events, function ($a, $b) {
+                    return $b['time'] <=> $a['time'];
+                });
+                $dash_recent_events = array_slice($dash_recent_events, 0, 5);
 
                 // Determine score color class
                 if ($security_score >= 80) {
@@ -154,37 +239,54 @@ if (!defined('ABSPATH')) {
                 }
                 ?>
 
-                <div class="asl-dash-grid">
+                <div class="asl-bento-grid">
 
-                <!-- Security Score Card -->
-                <div class="asl-security-score-card <?php echo esc_attr($score_class); ?>">
-                    <div class="asl-score-circle">
-                        <svg viewBox="0 0 36 36" class="asl-circular-chart">
-                            <path class="asl-circle-bg" d="M18 2.0845
-                                   a 15.9155 15.9155 0 0 1 0 31.831
-                                   a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <path class="asl-circle-progress"
-                                stroke-dasharray="<?php echo esc_attr($security_score); ?>, 100" d="M18 2.0845
-                                   a 15.9155 15.9155 0 0 1 0 31.831
-                                   a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <text x="18" y="20.35"
-                                class="asl-score-percentage"><?php echo esc_html($security_score); ?>%</text>
-                        </svg>
+                <!-- Security Score + Category Breakdown (Top-Left) -->
+                <div class="asl-security-score-card asl-bento-score <?php echo esc_attr($score_class); ?>">
+                    <div class="asl-score-top">
+                        <div class="asl-score-circle">
+                            <svg viewBox="0 0 36 36" class="asl-circular-chart">
+                                <path class="asl-circle-bg" d="M18 2.0845
+                                       a 15.9155 15.9155 0 0 1 0 31.831
+                                       a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="asl-circle-progress"
+                                    stroke-dasharray="<?php echo esc_attr($security_score); ?>, 100" d="M18 2.0845
+                                       a 15.9155 15.9155 0 0 1 0 31.831
+                                       a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <text x="18" y="20.35"
+                                    class="asl-score-percentage"><?php echo esc_html($security_score); ?>%</text>
+                            </svg>
+                        </div>
+                        <div class="asl-score-info">
+                            <h3><?php esc_html_e('Security Score', 'advanced-security-lite'); ?></h3>
+                            <span class="asl-score-label"><?php echo esc_html($score_label); ?></span>
+                            <p class="asl-score-details">
+                                <strong><?php echo esc_html($enabled_count); ?></strong>
+                                <?php esc_html_e('of', 'advanced-security-lite'); ?>
+                                <strong><?php echo esc_html($total_features); ?></strong>
+                                <?php esc_html_e('security features enabled', 'advanced-security-lite'); ?>
+                            </p>
+                        </div>
                     </div>
-                    <div class="asl-score-info">
-                        <h3><?php esc_html_e('Security Score', 'advanced-security-lite'); ?></h3>
-                        <span class="asl-score-label"><?php echo esc_html($score_label); ?></span>
-                        <p class="asl-score-details">
-                            <strong><?php echo esc_html($enabled_count); ?></strong>
-                            <?php esc_html_e('of', 'advanced-security-lite'); ?>
-                            <strong><?php echo esc_html($total_features); ?></strong>
-                            <?php esc_html_e('security features enabled', 'advanced-security-lite'); ?>
-                        </p>
+                    <div class="asl-score-bars">
+                        <?php foreach ($cat_bars as $bar) :
+                            $pct = $bar['total'] > 0 ? round(($bar['done'] / $bar['total']) * 100) : 0;
+                            ?>
+                            <div class="asl-score-bar-row">
+                                <div class="asl-score-bar-meta">
+                                    <span><?php echo esc_html($bar['label']); ?></span>
+                                    <span><?php echo esc_html($bar['done'] . '/' . $bar['total']); ?></span>
+                                </div>
+                                <div class="asl-score-bar-track">
+                                    <div class="asl-score-bar-fill" style="width: <?php echo esc_attr($pct); ?>%;"></div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="asl-stats-grid">
+                <!-- 2x2 Compact Stat Cards (Top-Right) -->
+                <div class="asl-stats-grid asl-bento-stats">
                     <div class="asl-stat-box">
                         <div class="asl-stat-icon asl-icon-primary"><i class="ph ph-shield-check"></i></div>
                         <div class="asl-stat-info">
@@ -192,6 +294,13 @@ if (!defined('ABSPATH')) {
                                 class="asl-stat-number"><?php echo esc_html($enabled_count); ?>/<?php echo esc_html($total_features); ?></span>
                             <span
                                 class="asl-stat-label"><?php esc_html_e('Features Active', 'advanced-security-lite'); ?></span>
+                        </div>
+                    </div>
+                    <div class="asl-stat-box">
+                        <div class="asl-stat-icon asl-icon-danger"><i class="ph ph-shield-warning"></i></div>
+                        <div class="asl-stat-info">
+                            <span class="asl-stat-number"><?php echo esc_html($dash_failed_count); ?></span>
+                            <span class="asl-stat-label"><?php esc_html_e('Failed Logins (3d)', 'advanced-security-lite'); ?></span>
                         </div>
                     </div>
                     <div class="asl-stat-box">
@@ -349,7 +458,45 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                </div><!-- /.asl-dash-grid -->
+                <!-- Recent Activity Snapshot (Bottom-Right) -->
+                <div class="asl-rec-card asl-bento-activity">
+                    <div class="asl-bento-card-head">
+                        <h4><i class="ph ph-clock-counter-clockwise"></i> <?php esc_html_e('Recent Activity', 'advanced-security-lite'); ?></h4>
+                        <a href="#activity" class="asl-rec-link" data-tab="activity"><?php esc_html_e('View all →', 'advanced-security-lite'); ?></a>
+                    </div>
+                    <div class="asl-rec-body">
+                        <?php if (!empty($dash_recent_events)) : ?>
+                            <div class="asl-table-responsive">
+                                <table class="asl-table asl-table-compact">
+                                    <thead>
+                                        <tr>
+                                            <th><?php esc_html_e('Event', 'advanced-security-lite'); ?></th>
+                                            <th><?php esc_html_e('User', 'advanced-security-lite'); ?></th>
+                                            <th><?php esc_html_e('IP', 'advanced-security-lite'); ?></th>
+                                            <th><?php esc_html_e('Time', 'advanced-security-lite'); ?></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($dash_recent_events as $ev) : ?>
+                                            <tr>
+                                                <td><span class="asl-event-pill asl-event-<?php echo esc_attr($ev['kind']); ?>"><?php echo esc_html($ev['type']); ?></span></td>
+                                                <td><code><?php echo esc_html($ev['who'] ?: '—'); ?></code></td>
+                                                <td><code><?php echo esc_html($ev['ip'] ?: '—'); ?></code></td>
+                                                <td><?php echo $ev['time'] ? esc_html(human_time_diff($ev['time'], time()) . ' ' . __('ago', 'advanced-security-lite')) : '—'; ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else : ?>
+                            <div class="asl-empty-state asl-empty-compact">
+                                <p><?php esc_html_e('No recent security events recorded.', 'advanced-security-lite'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                </div><!-- /.asl-bento-grid -->
             </div>
 
             <!-- General Settings Panel -->
@@ -1551,6 +1698,7 @@ if (!defined('ABSPATH')) {
             </div>
         </form>
     </main>
+    </div><!-- /.asl-shell -->
 
     <!-- Footer -->
     <footer class="asl-footer">

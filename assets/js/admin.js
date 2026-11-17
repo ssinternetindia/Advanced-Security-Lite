@@ -17,6 +17,7 @@
         // Initialize all functionality
         init: function () {
             this.initTabs();
+            this.initSearch();
             this.initToggles();
             this.initFormSubmission();
             this.initSpecialActions();
@@ -24,12 +25,30 @@
             this.initNotifications();
         },
 
-        // Initialize horizontal tab navigation
+        // Read-only tabs where the Save bar should stay hidden
+        readOnlyTabs: ['dashboard', 'activity', 'status', 'about'],
+
+        syncSaveBar: function (targetPanel) {
+            if (this.readOnlyTabs.indexOf(targetPanel) !== -1) {
+                $('.asl-save-bar').hide();
+            } else {
+                $('.asl-save-bar').show();
+            }
+        },
+
+        // Initialize sidebar tab navigation
         initTabs: function () {
             $('.asl-tab').on('click', function (e) {
                 e.preventDefault();
 
                 var targetPanel = $(this).data('tab');
+
+                // Clear active search when switching tabs
+                if ($('#asl-settings-search').val()) {
+                    $('#asl-settings-search').val('');
+                    $('#asl-search-results').prop('hidden', true);
+                    $('#asl-settings-form').show();
+                }
 
                 // Update active tab
                 $('.asl-tab').removeClass('active');
@@ -39,12 +58,7 @@
                 $('.asl-panel').removeClass('active');
                 $('#panel-' + targetPanel).addClass('active');
 
-                // Hide Save Bar if on About Tab
-                if (targetPanel === 'about') {
-                    $('.asl-save-bar').hide();
-                } else {
-                    $('.asl-save-bar').show();
-                }
+                ASL_Admin.syncSaveBar(targetPanel);
 
                 // Update URL hash without scrolling
                 if (history.pushState) {
@@ -56,6 +70,8 @@
             var hash = window.location.hash.substring(1);
             if (hash && $('#panel-' + hash).length) {
                 $('.asl-tab[data-tab="' + hash + '"]').trigger('click');
+            } else {
+                this.syncSaveBar($('.asl-tab.active').data('tab') || 'dashboard');
             }
 
             // Handle recommendation "Fix" links
@@ -64,11 +80,76 @@
                 var targetTab = $(this).data('tab');
                 if (targetTab) {
                     $('.asl-tab[data-tab="' + targetTab + '"]').trigger('click');
-                    // Scroll to top of the panel
                     $('html, body').animate({
-                        scrollTop: $('#panel-' + targetTab).offset().top - 100
-                    }, 300);
+                        scrollTop: 0
+                    }, 200);
                 }
+            });
+        },
+
+        // Initialize sidebar settings search
+        initSearch: function () {
+            var $input = $('#asl-settings-search');
+            var $results = $('#asl-search-results');
+            var $list = $('#asl-search-list');
+            var $summary = $('#asl-search-summary');
+            var $form = $('#asl-settings-form');
+
+            if (!$input.length) { return; }
+
+            function clearSearch() {
+                $input.val('');
+                $results.prop('hidden', true);
+                $form.show();
+            }
+
+            $('#asl-search-clear').on('click', clearSearch);
+
+            $input.on('input', function () {
+                var query = $.trim($(this).val()).toLowerCase();
+                if (!query) {
+                    clearSearch();
+                    return;
+                }
+
+                $list.empty();
+                var matches = 0;
+
+                $('.asl-panel .asl-option').each(function () {
+                    var $opt = $(this);
+                    var title = $.trim($opt.find('.asl-option-info strong').first().text());
+                    var desc = $.trim($opt.find('.asl-option-info span').first().text());
+                    if (!title) { return; }
+
+                    if (title.toLowerCase().indexOf(query) !== -1 || desc.toLowerCase().indexOf(query) !== -1) {
+                        var $panel = $opt.closest('.asl-panel');
+                        var tabId = ($panel.attr('id') || '').replace('panel-', '');
+                        var tabLabel = $.trim($('.asl-tab[data-tab="' + tabId + '"]').text()) || tabId;
+
+                        var $item = $('<div class="asl-search-item"></div>');
+                        var $info = $('<div class="asl-search-item-info"></div>')
+                            .append($('<strong></strong>').text(title))
+                            .append($('<span></span>').text(desc));
+                        var $btn = $('<button type="button" class="asl-btn asl-btn-secondary asl-btn-sm"></button>')
+                            .text(tabLabel + ' →')
+                            .on('click', function () {
+                                clearSearch();
+                                $('.asl-tab[data-tab="' + tabId + '"]').trigger('click');
+                            });
+
+                        $item.append($info, $btn);
+                        $list.append($item);
+                        matches++;
+                    }
+                });
+
+                $summary.text(matches + ' matching setting' + (matches === 1 ? '' : 's') + ' for "' + $input.val() + '"');
+                if (matches === 0) {
+                    $list.append('<p class="asl-search-empty">No matching settings found.</p>');
+                }
+
+                $form.hide();
+                $results.prop('hidden', false);
             });
         },
 
