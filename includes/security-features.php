@@ -64,7 +64,9 @@ class ASP_SecurityFeatures
         }
 
         if (get_option('asp_disallow_dir_listing', 0)) {
-            add_action('init', array($this, 'disableDirectoryListing'));
+            add_action('admin_init', array($this, 'disableDirectoryListing'));
+        } else {
+            add_action('admin_init', array($this, 'removeDirectoryListingBlock'));
         }
 
         if (get_option('asp_disallow_malicious_uploads', 0)) {
@@ -154,6 +156,8 @@ class ASP_SecurityFeatures
 
         if (get_option('asp_protect_sensitive_files', 0)) {
             add_action('admin_init', array($this, 'protectSensitiveFiles'));
+        } else {
+            add_action('admin_init', array($this, 'removeSensitiveFilesBlock'));
         }
     }
 
@@ -163,10 +167,6 @@ class ASP_SecurityFeatures
         remove_action('wp_head', 'rest_output_link_wp_head', 10);
         remove_action('wp_head', 'wp_oembed_add_discovery_links', 10);
         remove_action('template_redirect', 'rest_output_link_header', 11);
-
-        // Disable JSON API
-        add_filter('json_enabled', '__return_false');
-        add_filter('json_jsonp_enabled', '__return_false');
     }
 
     public function disableFeeds()
@@ -201,6 +201,12 @@ class ASP_SecurityFeatures
         $path = (string) parse_url($raw_uri, PHP_URL_PATH);
         $path = rawurldecode($path);
         $path = '/' . trim($path, '/');
+
+        // Strip site subdirectory prefix if WordPress is installed in a subfolder.
+        $home_path = rtrim((string) parse_url(home_url(), PHP_URL_PATH), '/');
+        if ('' !== $home_path && 0 === strpos($path, $home_path . '/')) {
+            $path = substr($path, strlen($home_path));
+        }
 
         // Sites using the "Plain" permalink structure route REST requests as
         // /index.php?rest_route=/wp/v2/media instead of /wp-json/wp/v2/media,
@@ -361,17 +367,36 @@ class ASP_SecurityFeatures
             copy($htaccess_path, $backup_path);
 
             // Use WordPress function to safely insert rules
-            $result = insert_with_markers($htaccess_path, 'Advanced Security Lite - Directory Listing', $rules);
+            insert_with_markers($htaccess_path, 'Advanced Security Lite - Directory Listing', $rules);
 
-            // Remove the backup (and any stale ones from failed runs) on success.
-            if ($result) {
-                foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
-                    wp_delete_file($stale_backup);
-                }
+            // Remove the backup (and any stale ones from failed runs) regardless of outcome.
+            foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
+                wp_delete_file($stale_backup);
             }
         }
 
         set_transient('asp_dir_listing_done', true, DAY_IN_SECONDS);
+    }
+
+    /**
+     * Remove the directory listing block from root .htaccess when the option is turned off.
+     */
+    public function removeDirectoryListingBlock()
+    {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
+        $htaccess_path = ABSPATH . '.htaccess';
+        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
+            insert_with_markers($htaccess_path, 'Advanced Security Lite - Directory Listing', array());
+        }
+
+        delete_transient('asp_dir_listing_done');
     }
 
     public function restrictUploadMimes($mimes)
@@ -532,15 +557,20 @@ class ASP_SecurityFeatures
             return;
         }
 
-        $users = get_users(array('fields' => 'ID', 'number' => 1000));
-        foreach ($users as $user_id) {
-            if ($this->getAuthorHash($user_id) === $hash) {
-                $query->set('author', (int) $user_id);
-                $query->set('author_name', '');
-                $this->obfuscated_resolved = true;
-                break;
+        $batch_size = 500;
+        $offset = 0;
+        do {
+            $users = get_users(array('fields' => 'ID', 'number' => $batch_size, 'offset' => $offset));
+            foreach ($users as $user_id) {
+                if ($this->getAuthorHash($user_id) === $hash) {
+                    $query->set('author', (int) $user_id);
+                    $query->set('author_name', '');
+                    $this->obfuscated_resolved = true;
+                    return;
+                }
             }
-        }
+            $offset += $batch_size;
+        } while (count($users) === $batch_size);
     }
 
     public function obfuscateEmails($content)
@@ -759,7 +789,7 @@ class ASP_SecurityFeatures
         if (isset($authordata) && is_object($authordata)) {
             $user = get_userdata($authordata->ID);
             if ($user && in_array('administrator', (array) $user->roles)) {
-                return '<span class="author vcard">' . __('Author', 'advanced-security-lite') . '</span>';
+                return '<span class="author vcard">' . esc_html__('Author', 'advanced-security-lite') . '</span>';
             }
         }
         return $link;
@@ -938,13 +968,11 @@ class ASP_SecurityFeatures
                 }
             }
 
-            $result = insert_with_markers($htaccess_path, 'Advanced Security Lite - Disable PHP Execution', $rules);
+            insert_with_markers($htaccess_path, 'Advanced Security Lite - Disable PHP Execution', $rules);
 
-            // Remove the backup (and any stale ones from failed runs) on success.
-            if ($result) {
-                foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
-                    wp_delete_file($stale_backup);
-                }
+            // Remove the backup (and any stale ones from failed runs).
+            foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
+                wp_delete_file($stale_backup);
             }
         }
 
@@ -1081,15 +1109,34 @@ class ASP_SecurityFeatures
         $backup_path = $htaccess_path . '.asp-backup-' . time();
         copy($htaccess_path, $backup_path);
 
-        $result = insert_with_markers($htaccess_path, 'Advanced Security Lite - Sensitive Files Protection', $rules);
+        insert_with_markers($htaccess_path, 'Advanced Security Lite - Sensitive Files Protection', $rules);
 
-        // Remove the backup (and any stale ones from failed runs) on success.
-        if ($result) {
-            foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
-                wp_delete_file($stale_backup);
-            }
+        // Remove the backup (and any stale ones from failed runs).
+        foreach ((array) glob($htaccess_path . '.asp-backup-*') as $stale_backup) {
+            wp_delete_file($stale_backup);
         }
 
         set_transient($run_key, true, DAY_IN_SECONDS);
+    }
+
+    /**
+     * Remove the sensitive files block from root .htaccess when the option is turned off.
+     */
+    public function removeSensitiveFilesBlock()
+    {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
+        $htaccess_path = ABSPATH . '.htaccess';
+        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
+            insert_with_markers($htaccess_path, 'Advanced Security Lite - Sensitive Files Protection', array());
+        }
+
+        delete_transient('asp_sensitive_files_protected');
     }
 }

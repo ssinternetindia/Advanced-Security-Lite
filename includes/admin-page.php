@@ -104,7 +104,6 @@ if (!defined('ABSPATH')) {
     <!-- Main Content Area -->
     <main class="asl-main">
         <form id="asl-settings-form" method="post">
-            <?php wp_nonce_field('asp_settings', 'asp_nonce'); ?>
 
             <!-- Dashboard Panel -->
             <div id="panel-dashboard" class="asl-panel active">
@@ -1028,11 +1027,6 @@ if (!defined('ABSPATH')) {
                     </div>
                     <div class="asl-card-body">
                         <?php
-                        // Run cleanup before displaying to ensure 3-day old logs are removed
-                        if (function_exists('asp_cleanup_logs_older_than_3_days')) {
-                            asp_cleanup_logs_older_than_3_days();
-                        }
-
                         $failed_logins = get_option('asp_failed_logins', array());
                         $has_attempts = false;
 

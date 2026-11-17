@@ -2,8 +2,8 @@
 Contributors: Anuj Kumar Singh
 Tags: security, firewall, hardening, login, captcha, recaptcha, maintenance
 Requires at least: 5.8
-Tested up to: 7.1
-Stable tag: 1.0.1
+Tested up to: 7.1.4
+Stable tag: 1.0.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -100,6 +100,17 @@ Yes — enable "Hide Admin Notices" in the General tab. Hidden notices are liste
 
 == Changelog ==
 
+= 1.0.2 =
+
+Security & Reliability
+* Fixed login rate limiter and admin access log timestamp mismatch (`time()` vs `current_time('timestamp')`) so sliding lockout windows and 3-day cleanup work accurately in all timezones.
+* Fixed `uploads/.htaccess` uninstall cleanup to use `insert_with_markers()`, preventing orphaned `<IfModule>` directives.
+* Hardened `wp-config.php` salt regeneration: escapes generated salts, checks parent directory for `wp-config.php`, and removes backup files on write failure.
+* Gated upload scanning behind its toggle, scoped content XSS attribute stripping to HTML tags only, and restricted Error Log Viewer UI/nonces to `manage_options` users.
+* Prevented `wp_options` autoload bloat by storing log options with `autoload = false`, capping tracked failed-login IPs, and supporting WP 6.6+ autoload values in database optimization.
+* Added `.htaccess` cleanup when disabling Directory Listing or Sensitive Files Protection, fixed REST API prefix matching on subdirectory installs, paginated author slug resolution past 1,000 users, and enforced mutual exclusion between reCAPTCHA v2 and v3.
+* Tested up to WordPress 7.1.4.
+
 = 1.0.1 =
 
 Added
@@ -135,12 +146,15 @@ Changed
 * .htaccess rules are written at most once per day instead of on every admin page load.
 * "Trust Proxy Headers" removed — visitor IPs always come from the direct connection.
 * Maintenance screen redesigned with a clean white layout and blue accent.
-* Tested up to WordPress 7.1. Verified clean on PHP 7.4 through PHP 8.x.
+* Tested up to WordPress 7.1.4. Verified clean on PHP 7.4 through PHP 8.x.
 
 = 1.0.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Fixes login rate-limiting across non-UTC timezones, hardens `.htaccess` uninstall/toggle cleanup and salt regeneration, and reduces `wp_options` autoload bloat.
 
 = 1.0.1 =
 Major reliability and security pass: safe salt regeneration, spoof-proof rate limiting, a working error log viewer, admin notice manager, image CAPTCHA, and a full admin UI refresh. Update recommended.

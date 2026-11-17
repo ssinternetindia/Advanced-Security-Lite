@@ -73,6 +73,10 @@ class ASP_Enhancements
 
     public function addErrorLogNode($wp_admin_bar)
     {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         $icon = '<span class="asp-log-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 13 2 2-2 2"/></svg></span>';
 
         $wp_admin_bar->add_node(array(
@@ -88,6 +92,10 @@ class ASP_Enhancements
 
     public function enqueueErrorLogViewer()
     {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         wp_register_script('asp-errorlog-viewer', false, array('jquery'), ASP_VERSION, true);
         wp_enqueue_script('asp-errorlog-viewer');
 
@@ -303,6 +311,9 @@ JS;
      */
     public function renderErrorLogModal()
     {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
         ?>
         <div id="asp-errorlog-modal" class="asl-errorlog-overlay" hidden>
             <div class="asl-errorlog-modal" role="dialog" aria-modal="true" aria-labelledby="asp-errorlog-title">
@@ -600,7 +611,7 @@ JS;
 
         $attempts[$ip][] = array(
             'username' => $username,
-            'time' => current_time('timestamp'),
+            'time' => time(),
             'user_agent' => $user_agent
         );
 
@@ -611,7 +622,12 @@ JS;
             $attempts[$ip] = array_slice($attempts[$ip], -$keep);
         }
 
-        update_option('asp_failed_logins', $attempts);
+        // Cap total tracked IPs to prevent wp_options bloat under distributed attacks.
+        if (count($attempts) > 500) {
+            $attempts = array_slice($attempts, -500, null, true);
+        }
+
+        update_option('asp_failed_logins', $attempts, false);
 
         // Set a hard lockout transient when the threshold is crossed.
         // This eliminates the TOCTOU race between log and check.
@@ -638,7 +654,7 @@ JS;
         $attempts = get_option('asp_failed_logins', array());
         if (isset($attempts[$ip])) {
             unset($attempts[$ip]);
-            update_option('asp_failed_logins', $attempts);
+            update_option('asp_failed_logins', $attempts, false);
         }
 
         delete_transient('asp_lock_' . md5($ip));
@@ -709,8 +725,11 @@ JS;
 
     public function enhancedFileSecurity()
     {
-        // Enhanced upload security (malicious-code scan for image uploads).
-        add_filter('wp_handle_upload_prefilter', array($this, 'enhancedUploadSecurity'));
+        // Enhanced upload security (malicious-code scan for image uploads)
+        // only runs when the Upload Protection toggle is enabled.
+        if (get_option('asp_disallow_malicious_uploads', 0)) {
+            add_filter('wp_handle_upload_prefilter', array($this, 'enhancedUploadSecurity'));
+        }
 
         // Note: sensitive-file .htaccess protection and the uploads PHP
         // execution block are handled by ASP_SecurityFeatures to keep a
@@ -811,7 +830,7 @@ JS;
                 'user_id' => $user->ID,
                 'username' => $user->user_login,
                 'ip' => asp_get_client_ip(),
-                'time' => current_time('timestamp'),
+                'time' => time(),
                 'page' => $request_uri
             );
 
@@ -820,7 +839,7 @@ JS;
                 $access_log = array_slice($access_log, -100);
             }
 
-            update_option('asp_admin_access_log', $access_log);
+            update_option('asp_admin_access_log', $access_log, false);
         }
     }
 
@@ -849,14 +868,21 @@ JS;
      */
     public function enhancedXssProtection($content)
     {
-        // Remove potentially dangerous attributes (quoted and unquoted values).
-        $content = preg_replace('/on\w+\s*=\s*"[^"]*"/i', '', $content);
-        $content = preg_replace("/on\\w+\\s*=\\s*'[^']*'/i", '', $content);
-        $content = preg_replace('/on\w+\s*=\s*[^\s"\'>]+/i', '', $content);
-        $content = preg_replace('/javascript\s*:/i', '', $content);
-        $content = preg_replace('/vbscript\s*:/i', '', $content);
+        if (!is_string($content) || '' === $content) {
+            return $content;
+        }
 
-        return $content;
+        // Strip inline event-handler attributes and script URIs only inside
+        // HTML tags so plain-text prose/code is never corrupted.
+        return preg_replace_callback('/<[^>]+>/', function ($matches) {
+            $tag = $matches[0];
+            $tag = preg_replace('/\bon\w+\s*=\s*"[^"]*"/i', '', $tag);
+            $tag = preg_replace("/\\bon\\w+\\s*=\\s*'[^']*'/i", '', $tag);
+            $tag = preg_replace('/\bon\w+\s*=\s*[^\s"\'>]+/i', '', $tag);
+            $tag = preg_replace('/javascript\s*:/i', '', $tag);
+            $tag = preg_replace('/vbscript\s*:/i', '', $tag);
+            return $tag;
+        }, $content);
     }
 
     /**
@@ -918,7 +944,7 @@ JS;
         $large_options = $wpdb->get_results("
             SELECT option_name, LENGTH(option_value) as size 
             FROM {$wpdb->options} 
-            WHERE autoload = 'yes' 
+            WHERE autoload IN ('yes', 'on', 'auto') 
             AND LENGTH(option_value) > 1000000
         ");
 

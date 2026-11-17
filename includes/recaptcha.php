@@ -23,8 +23,14 @@ class ASP_Recaptcha
     {
         $this->site_key = get_option('asp_recaptcha_site_key', '');
         $this->secret_key = get_option('asp_recaptcha_secret_key', '');
-        $this->v2_enabled = get_option('asp_recaptcha_v2_enabled', 0);
-        $this->v3_enabled = get_option('asp_recaptcha_v3_enabled', 0);
+        $this->v2_enabled = (bool) get_option('asp_recaptcha_v2_enabled', 0);
+        $this->v3_enabled = (bool) get_option('asp_recaptcha_v3_enabled', 0);
+
+        // v2 and v3 cannot both control g-recaptcha-response on the same form;
+        // if both are somehow enabled in options, prefer v3.
+        if ($this->v2_enabled && $this->v3_enabled) {
+            $this->v2_enabled = false;
+        }
 
         $this->initHooks();
     }
@@ -286,7 +292,7 @@ class ASP_Recaptcha
         }
 
         // Verify the hostname to prevent cross-site token replay.
-        $site_host = (string) parse_url(home_url(), PHP_URL_HOST);
+        $site_host = strtolower((string) parse_url(home_url(), PHP_URL_HOST));
         $token_host = isset($result['hostname']) ? strtolower($result['hostname']) : '';
         if ('' === $token_host) {
             return false;

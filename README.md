@@ -1,6 +1,6 @@
 # Advanced Security Lite
 
-**Contributors:** Anuj Kumar Singh · **Requires:** WordPress 5.8+ · **PHP:** 7.4 – 8.x · **License:** GPLv2 or later · **Version:** 1.0.1
+**Contributors:** Anuj Kumar Singh · **Requires:** WordPress 5.8+ · **PHP:** 7.4 – 8.x · **License:** GPLv2 or later · **Version:** 1.0.2
 
 A powerful WordPress security plugin featuring a clean admin interface and advanced protection tools to safeguard your website from threats.
 
@@ -99,6 +99,17 @@ Enable "Hide Admin Notices" in the General tab. Hidden notices are listed behind
 
 ## Changelog
 
+### 1.0.2
+
+**Security & Reliability**
+- Fixed login rate limiter and admin access log timestamp mismatch (`time()` vs `current_time('timestamp')`) across all timezones
+- Fixed `uploads/.htaccess` uninstall cleanup using `insert_with_markers()`
+- Hardened `wp-config.php` salt regeneration (escaped salts, parent-dir lookup, failed-write backup cleanup)
+- Gated upload scanning behind its toggle, scoped XSS attribute stripping to HTML tags, and restricted Error Log Viewer UI/nonces to `manage_options`
+- Stored log options with `autoload = false`, capped tracked failed-login IPs, and added WP 6.6+ autoload query support
+- Added `.htaccess` cleanup on toggle-off for Directory Listing and Sensitive Files Protection, subdirectory REST API prefix fix, paginated author slug resolution, and reCAPTCHA v2/v3 mutual exclusion
+- Tested up to WordPress 7.1.4
+
 ### 1.0.1
 
 **Added**
@@ -134,7 +145,7 @@ Enable "Hide Admin Notices" in the General tab. Hidden notices are listed behind
 - `.htaccess` writes throttled to once per day
 - "Trust Proxy Headers" removed — direct connection IP only
 - Maintenance screen redesigned (white, blue accent)
-- Tested up to WordPress 7.1; verified clean on PHP 7.4 – 8.x
+- Tested up to WordPress 7.1.4; verified clean on PHP 7.4 – 8.x
 
 ### 1.0.0
 

@@ -155,7 +155,18 @@
                 }
             }
 
-            $('#recaptcha_v2_enabled, #recaptcha_v3_enabled').on('change', toggleRecaptchaFields);
+            $('#recaptcha_v2_enabled').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#recaptcha_v3_enabled').prop('checked', false);
+                }
+                toggleRecaptchaFields();
+            });
+            $('#recaptcha_v3_enabled').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#recaptcha_v2_enabled').prop('checked', false);
+                }
+                toggleRecaptchaFields();
+            });
             toggleRecaptchaFields(); // Initial state
 
             // Show/hide the login design options with the toggle

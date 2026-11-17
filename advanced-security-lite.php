@@ -3,7 +3,7 @@
  * Plugin Name: Advanced Security Lite
  * Plugin URI: https://ssinternet.in/products/wordpress-plugins/advanced-security-lite
  * Description: A powerful WordPress security plugin featuring a modern, intuitive interface and advanced protection tools to safeguard your website from threats.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Anuj Kumar Singh
  * Author URI: https://ssinternet.in/
  * License: GPL v2 or later
@@ -12,7 +12,7 @@
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
- * Tested up to: 7.1
+ * Tested up to: 7.1.4
  */
 
 // Prevent direct access
@@ -567,14 +567,14 @@ function asp_cleanup_logs_older_than_3_days()
             unset($failed_logins[$ip]);
         }
     }
-    update_option('asp_failed_logins', $failed_logins);
+    update_option('asp_failed_logins', $failed_logins, false);
 
     // Cleanup admin access log
     $admin_log = get_option('asp_admin_access_log', array());
     $admin_log = array_filter($admin_log, function ($entry) use ($three_days_ago) {
         return isset($entry['time']) && $entry['time'] > $three_days_ago;
     });
-    update_option('asp_admin_access_log', array_values($admin_log));
+    update_option('asp_admin_access_log', array_values($admin_log), false);
 }
 
 // AJAX handlers - register after WordPress is loaded
@@ -1071,6 +1071,11 @@ function asp_save_settings()
         }
     }
 
+    // Keep reCAPTCHA v2 and v3 mutually exclusive in stored options.
+    if (get_option('asp_recaptcha_v2_enabled', 0) && get_option('asp_recaptcha_v3_enabled', 0)) {
+        update_option('asp_recaptcha_v2_enabled', 0);
+    }
+
     // Reschedule salt regeneration only when its settings actually changed.
     if ($salt_changed) {
         wp_clear_scheduled_hook('asp_regenerate_salts');
@@ -1124,6 +1129,12 @@ function asp_regenerate_wp_config_salts()
     );
 
     $wp_config_path = ABSPATH . 'wp-config.php';
+    if (!file_exists($wp_config_path)) {
+        $parent_config = dirname(ABSPATH) . '/wp-config.php';
+        if (file_exists($parent_config) && !file_exists(dirname(ABSPATH) . '/wp-settings.php')) {
+            $wp_config_path = $parent_config;
+        }
+    }
 
     if (!file_exists($wp_config_path)) {
         return new WP_Error('asp_config_missing', __('wp-config.php file not found', 'advanced-security-lite'));
@@ -1142,6 +1153,7 @@ function asp_regenerate_wp_config_salts()
     $replaced = 0;
     foreach ($salts as $salt) {
         $new_salt = wp_generate_password(64, true, true);
+        $escaped_salt = addcslashes($new_salt, "'\\");
         $pattern = "/define\s*\(\s*['\"]" . preg_quote($salt, '/') . "['\"]\s*,\s*['\"][^'\"]*['\"]\s*\)\s*;/";
         // preg_replace_callback (not preg_replace) is required here: $new_salt
         // can legitimately contain a "$" followed by digits, and preg_replace()
@@ -1150,8 +1162,8 @@ function asp_regenerate_wp_config_salts()
         // verbatim, so the replacement text is never re-interpreted.
         $config_content = preg_replace_callback(
             $pattern,
-            static function ($matches) use ($salt, $new_salt) {
-                return "define('" . $salt . "', '" . $new_salt . "');";
+            static function ($matches) use ($salt, $escaped_salt) {
+                return "define('" . $salt . "', '" . $escaped_salt . "');";
             },
             $config_content,
             -1,
@@ -1194,6 +1206,9 @@ function asp_regenerate_wp_config_salts()
     }
 
     if (!$written) {
+        if ('' !== $backup_path && file_exists($backup_path)) {
+            wp_delete_file($backup_path);
+        }
         return new WP_Error('asp_write_failed', __('Failed to write to wp-config.php', 'advanced-security-lite'));
     }
 
@@ -1301,10 +1316,10 @@ function asp_clear_all_logs()
     }
 
     // Clear failed logins
-    update_option('asp_failed_logins', array());
+    update_option('asp_failed_logins', array(), false);
 
     // Clear admin access log
-    update_option('asp_admin_access_log', array());
+    update_option('asp_admin_access_log', array(), false);
 
     // Suppress the automatic admin-access log entry for the immediate
     // post-clear reload, otherwise the log repopulates instantly and the

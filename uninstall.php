@@ -147,56 +147,30 @@ function asp_cleanup_htaccess()
         }
     }
 
-    // Uploads .htaccess: rules were appended raw under our comment markers.
+    // Uploads .htaccess: rules were inserted via insert_with_markers().
     $upload_dir = wp_upload_dir();
-    $uploads_htaccess = trailingslashit($upload_dir['basedir']) . '.htaccess';
+    $uploads_basedir = isset($upload_dir['basedir']) ? $upload_dir['basedir'] : '';
+    $uploads_htaccess = '' !== $uploads_basedir ? trailingslashit($uploads_basedir) . '.htaccess' : '';
 
-    if (file_exists($uploads_htaccess) && wp_is_writable($uploads_htaccess)) {
-        $lines = file($uploads_htaccess, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if (is_array($lines)) {
-            $kept = array();
-            $skipping = false;
+    if ('' !== $uploads_htaccess && file_exists($uploads_htaccess) && wp_is_writable($uploads_htaccess)) {
+        insert_with_markers($uploads_htaccess, 'Advanced Security Lite - Disable PHP Execution', array());
 
-            foreach ($lines as $line) {
-                if ($skipping) {
-                    // Drop every line that belongs to our inserted rule
-                    // section (marker + one or more <Files> blocks).
-                    $t = strtolower(trim($line));
-                    $isOurRule = ('' === $t)
-                        || (0 === strpos($t, '<files'))
-                        || ('</files>' === $t)
-                        || (0 === strpos($t, 'order '))
-                        || (0 === strpos($t, 'deny'))
-                        || (0 === strpos($t, 'allow'))
-                        || (0 === strpos($t, 'require'));
-
-                    if ($isOurRule) {
-                        continue;
-                    }
-
-                    // First foreign line: our section ended, keep it.
-                    $skipping = false;
-                } elseif (0 === strpos(ltrim($line), '# Advanced Security Lite')) {
-                    $skipping = true;
-                    continue;
-                }
-
-                $kept[] = $line;
-            }
-
-            $remaining = trim(implode("\n", $kept));
-            if ('' === $remaining) {
-                wp_delete_file($uploads_htaccess);
-            } else {
-                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-                file_put_contents($uploads_htaccess, $remaining . "\n");
-            }
+        // Delete the file if nothing remains outside our removed marker block.
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
+        $remaining = file_get_contents($uploads_htaccess);
+        if (false !== $remaining && '' === trim($remaining)) {
+            wp_delete_file($uploads_htaccess);
         }
     }
 
     // Remove leftover backups created by the plugin.
     foreach ((array) glob(ABSPATH . '.htaccess.asp-backup-*') as $backup) {
         wp_delete_file($backup);
+    }
+    if ('' !== $uploads_basedir) {
+        foreach ((array) glob(trailingslashit($uploads_basedir) . '.htaccess.asp-backup-*') as $backup) {
+            wp_delete_file($backup);
+        }
     }
     wp_delete_file(ABSPATH . 'wp-config.php.asp-backup');
 }
