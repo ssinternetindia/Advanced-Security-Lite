@@ -73,11 +73,11 @@ class ASP_Enhancements
 
     public function addErrorLogNode($wp_admin_bar)
     {
-        if (!current_user_can('manage_options')) {
+        if (!is_admin() || !current_user_can('manage_options')) {
             return;
         }
 
-        $icon = '<span class="asp-log-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 13 2 2-2 2"/></svg></span>';
+        $icon = '<span class="asp-log-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m10 13-2 2 2 2"/><path d="m14 13 2 2-2 2"/></svg></span>';
 
         $wp_admin_bar->add_node(array(
             'id' => 'asp-errorlog-top',
@@ -373,27 +373,27 @@ JS;
         ));
 
         wp_add_inline_style('asp-notices-bell', '
-#wp-admin-bar-asp-admin-notices > .ab-item { display: flex !important; align-items: center; gap: 5px; }
-.asp-bell-icon { display: inline-flex; line-height: 1; color: #c3c4c7; transition: color .15s ease; }
-#wp-admin-bar-asp-admin-notices:hover .asp-bell-icon { color: #fff; }
-.asp-bell-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#wp-admin-bar-asp-admin-notices.has-notices .asp-bell-icon { color: #f0b849; }
-.asp-bell-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 3px; border-radius: 999px; background: #8c8f94; color: #fff; font-size: 10.5px; font-weight: 700; line-height: 1; }
-#wp-admin-bar-asp-admin-notices.has-notices .asp-bell-count { background: #d63638; animation: asp-bell-pulse 2.2s ease-in-out infinite; }
+#wpadminbar #wp-admin-bar-asp-admin-notices > .ab-item { display: flex !important; align-items: center !important; gap: 6px !important; height: 32px !important; line-height: 32px !important; white-space: nowrap !important; }
+#wpadminbar #wp-admin-bar-asp-admin-notices .asp-bell-icon { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 15px !important; height: 15px !important; line-height: 1 !important; color: #c3c4c7; transition: color .15s ease; flex-shrink: 0 !important; }
+#wpadminbar #wp-admin-bar-asp-admin-notices:hover .asp-bell-icon { color: #fff; }
+#wpadminbar #wp-admin-bar-asp-admin-notices .asp-bell-icon svg { display: block !important; width: 15px !important; height: 15px !important; max-width: 15px !important; max-height: 15px !important; fill: none !important; stroke: currentColor !important; stroke-width: 2 !important; stroke-linecap: round; stroke-linejoin: round; }
+#wpadminbar #wp-admin-bar-asp-admin-notices.has-notices .asp-bell-icon { color: #f0b849; }
+#wpadminbar #wp-admin-bar-asp-admin-notices .asp-bell-count { display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 18px !important; height: 18px !important; padding: 0 5px !important; margin-left: 2px !important; border-radius: 999px !important; background: #8c8f94; color: #fff !important; font-size: 10.5px !important; font-weight: 700 !important; line-height: 1 !important; }
+#wpadminbar #wp-admin-bar-asp-admin-notices.has-notices .asp-bell-count { background: #d63638; animation: asp-bell-pulse 2.2s ease-in-out infinite; }
 @keyframes asp-bell-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(214,54,56,.45);} 50% { box-shadow: 0 0 0 5px rgba(214,54,56,0);} }
 .asp-notice-hidden { display: none !important; }
-.asp-notices-popover { position: fixed; z-index: 99999; width: 480px; max-width: calc(100vw - 24px); max-height: 64vh; overflow: auto; background: #fff; border: 1px solid #dcdcde; border-radius: 6px; box-shadow: 0 5px 16px rgba(0,0,0,.14); padding: 0; }
-.asp-notices-popover-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; background: #fff; border-bottom: 1px solid #f0f0f1; font-size: 13px; font-weight: 600; color: #1d2327; }
+.asp-notices-popover { position: fixed; z-index: 999999; width: 480px; max-width: calc(100vw - 24px); max-height: 64vh; overflow: auto; background: #fff; border: 1px solid #dcdcde; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.16); padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+.asp-notices-popover-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; background: #fff; border-bottom: 1px solid #f0f0f1; font-size: 13px; font-weight: 600; color: #1d2327; }
 .asp-notices-popover-actions { display: flex; align-items: center; gap: 6px; }
-.asp-notices-restore { background: #f0f0f1; border: 1px solid #dcdcde; border-radius: 6px; padding: 3px 10px; font-size: 12px; cursor: pointer; color: #2271b1; }
+.asp-notices-restore { background: #f0f0f1; border: 1px solid #dcdcde; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 500; cursor: pointer; color: #2271b1; }
 .asp-notices-restore:hover { background: #e8eaeb; }
-.asp-notices-popover-close { background: none; border: none; cursor: pointer; font-size: 17px; line-height: 1; color: #787c82; padding: 2px 4px; }
+.asp-notices-popover-close { background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; color: #787c82; padding: 2px 6px; }
 .asp-notices-popover-close:hover { color: #1d2327; }
 .asp-notices-popover-body { padding: 12px 14px; }
 .asp-notices-empty { margin: 0; padding: 22px 6px; text-align: center; color: #787c82; font-size: 13px; }
 .asp-notices-popover-foot { padding: 9px 14px; border-top: 1px solid #f0f0f1; font-size: 11.5px; color: #8c8f94; }
-.asp-notices-popover .notice, .asp-notices-popover .update-nag, .asp-notices-popover #message { margin: 0 0 10px !important; }
-@media (max-width: 782px) { #wp-admin-bar-asp-admin-notices .asp-bell-text { display: none; } }
+.asp-notices-popover .notice, .asp-notices-popover .update-nag, .asp-notices-popover #message, .asp-notices-popover .updated, .asp-notices-popover .error { display: block !important; position: static !important; margin: 0 0 10px !important; }
+@media (max-width: 782px) { #wpadminbar #wp-admin-bar-asp-admin-notices .asp-bell-text { display: none !important; } }
 ');
 
         // Nowdoc (<<<'JS') on purpose: the script contains $ identifiers
@@ -405,18 +405,15 @@ JS;
     var NODE_ID = 'wp-admin-bar-asp-admin-notices';
     var POPOVER_ID = 'asp-notices-popover';
 
-    /* Top-level notices plus legacy .updated/.error classes; scoped to the
-     * content body so admin-bar/screen-meta areas are never touched. */
+    /* Top-level and wrapped notices plus legacy .updated/.error classes;
+     * scoped to #wpbody-content while excluding inline form messages. */
     var SELECTOR = [
-        '#wpbody-content > .notice',
-        '#wpbody-content > .update-nag',
+        '#wpbody-content .notice:not(.inline):not(.hidden):not(.notice-alt)',
+        '#wpbody-content .update-nag',
         '#wpbody-content > #message',
-        '#wpbody-content > .updated',
-        '#wpbody-content > .error',
-        '#wpbody-content > .wrap > .notice',
-        '#wpbody-content > .wrap > .update-nag',
-        '#wpbody-content > .wrap > .updated',
-        '#wpbody-content > .wrap > .error'
+        '#wpbody-content > .wrap > #message',
+        '#wpbody-content .updated:not(.inline):not(.hidden)',
+        '#wpbody-content .error:not(.inline):not(.hidden)'
     ].join(', ');
 
     function node() { return document.getElementById(NODE_ID); }
@@ -571,7 +568,11 @@ JS;
      */
     public function addNoticesBellNode($wp_admin_bar)
     {
-        $bell_svg = '<span class="asp-bell-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>';
+        if (!is_admin()) {
+            return;
+        }
+
+        $bell_svg = '<span class="asp-bell-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>';
 
         $wp_admin_bar->add_node(array(
             'id' => 'asp-admin-notices',
