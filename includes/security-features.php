@@ -46,9 +46,7 @@ class ASP_SecurityFeatures
             add_filter('option_users_can_register', '__return_false');
         }
 
-        if (get_option('asp_disable_password_recovery', 0)) {
-            add_filter('allow_password_reset', '__return_false');
-        }
+        // Note: Disable Password Recovery is handled completely by ASP_Enhancements.
 
         if (get_option('asp_auto_regenerate_salts', 0)) {
             add_action('wp_loaded', array($this, 'scheduleAutoSaltRegeneration'));
@@ -56,6 +54,7 @@ class ASP_SecurityFeatures
 
         if (get_option('asp_disable_xmlrpc', 0)) {
             add_filter('xmlrpc_enabled', '__return_false');
+            add_filter('xmlrpc_methods', '__return_empty_array');
             add_filter('wp_headers', array($this, 'removeXmlrpcHeader'));
         }
 
@@ -97,13 +96,17 @@ class ASP_SecurityFeatures
         if (get_option('asp_hide_wp_version', 0)) {
             add_filter('the_generator', '__return_empty_string');
             add_action('wp_head', array($this, 'removeWpVersion'), 1);
+            add_filter('style_loader_src', array($this, 'removeWpVersionFromSrc'), 9999);
+            add_filter('script_loader_src', array($this, 'removeWpVersionFromSrc'), 9999);
         }
 
         // Custom login URL is handled by ASP_LoginCustomizer class
 
         if (get_option('asp_obfuscate_author_slugs', 0)) {
             add_filter('author_link', array($this, 'obfuscateAuthorSlugs'), 10, 2);
-            add_action('pre_get_posts', array($this, 'resolveObfuscatedAuthor'));
+            // Run on parse_query at priority 1 so $this->obfuscated_resolved is
+            // set before blockAuthorQueryVars runs at priority 10.
+            add_action('parse_query', array($this, 'resolveObfuscatedAuthor'), 1);
         }
 
         if (get_option('asp_obfuscate_emails', 0)) {
@@ -136,6 +139,7 @@ class ASP_SecurityFeatures
             add_filter('author_link', array($this, 'hideAdminAuthorLink'), 10, 2);
             add_filter('the_author', array($this, 'hideAdminDisplayName'));
             add_filter('the_author_posts_link', array($this, 'hideAdminPostsLink'));
+            add_filter('oembed_response_data', array($this, 'hideAdminOembedAuthor'), 10, 2);
         }
 
         if (get_option('asp_maintenance_mode', 0)) {
@@ -184,7 +188,11 @@ class ASP_SecurityFeatures
 
     public function disableFeedAction()
     {
-        wp_die(esc_html__('Feeds are disabled on this site.', 'advanced-security-lite'));
+        wp_die(
+            esc_html__('Feeds are disabled on this site.', 'advanced-security-lite'),
+            '',
+            array('response' => 403)
+        );
     }
 
     public function disableRestApi($access)
@@ -194,39 +202,51 @@ class ASP_SecurityFeatures
             return $access;
         }
 
-        // Match only the URL path (not query string) to prevent
-        // bypasses like /wp-json/wp/v2/users?x=/wc/.
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- raw value used only for path extraction
-        $raw_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-        $path = (string) parse_url($raw_uri, PHP_URL_PATH);
-        $path = rawurldecode($path);
-        $path = '/' . trim($path, '/');
+        $rest_prefix = '/' . trim(function_exists('rest_get_url_prefix') ? rest_get_url_prefix() : 'wp-json', '/');
 
-        // Strip site subdirectory prefix if WordPress is installed in a subfolder.
-        $home_path = rtrim((string) parse_url(home_url(), PHP_URL_PATH), '/');
-        if ('' !== $home_path && 0 === strpos($path, $home_path . '/')) {
-            $path = substr($path, strlen($home_path));
-        }
-
-        // Sites using the "Plain" permalink structure route REST requests as
-        // /index.php?rest_route=/wp/v2/media instead of /wp-json/wp/v2/media,
-        // so the URL path alone never matches. Normalize using rest_route
-        // when it is present so the allow-list below still works there.
-        if (isset($_GET['rest_route']) && is_string($_GET['rest_route']) && '' !== $_GET['rest_route']) {
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- raw value used only for path extraction
-            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only route resolution, no state change
-            $route = rawurldecode(wp_unslash($_GET['rest_route']));
-            $path = '/wp-json/' . ltrim($route, '/');
+        // Resolve the actual route WordPress will dispatch first (from parsed
+        // query_vars) so a spoofed ?rest_route=/wc query param on a pretty
+        // /wp-json/wp/v2/users URL can never bypass this restriction.
+        $path = '';
+        if (isset($GLOBALS['wp']) && is_object($GLOBALS['wp']) && !empty($GLOBALS['wp']->query_vars['rest_route'])) {
+            $route = rawurldecode((string) $GLOBALS['wp']->query_vars['rest_route']);
+            $path = $rest_prefix . '/' . ltrim($route, '/');
             $path = '/' . trim($path, '/');
+        } else {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- raw value used only for path extraction
+            $raw_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+            $path = (string) parse_url($raw_uri, PHP_URL_PATH);
+            $path = rawurldecode($path);
+            $path = '/' . trim($path, '/');
+
+            // Strip site subdirectory prefix if WordPress is installed in a subfolder.
+            $home_path = rtrim((string) parse_url(home_url(), PHP_URL_PATH), '/');
+            if ('' !== $home_path && 0 === strpos($path, $home_path . '/')) {
+                $path = substr($path, strlen($home_path));
+            }
+
+            // Plain permalinks route REST requests as /index.php?rest_route=...
+            // Only consult $_GET['rest_route'] when the URI path is not already /<rest_prefix>*.
+            if (
+                0 !== strpos($path, $rest_prefix)
+                && isset($_GET['rest_route'])
+                && is_string($_GET['rest_route'])
+                && '' !== $_GET['rest_route']
+            ) {
+                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.NonceVerification.Recommended
+                $route = rawurldecode(wp_unslash($_GET['rest_route']));
+                $path = $rest_prefix . '/' . ltrim($route, '/');
+                $path = '/' . trim($path, '/');
+            }
         }
 
-        // Allowed route prefixes (all start from /wp-json/).
+        // Allowed route prefixes (all start from /<rest_prefix>/).
         $allowed_prefixes = array(
-            '/wp-json/wc',
-            '/wp-json/wp/v2/media',
-            '/wp-json/contact-form-7',
-            '/wp-json/elementor',
-            '/wp-json/yoast',
+            $rest_prefix . '/wc',
+            $rest_prefix . '/wp/v2/media',
+            $rest_prefix . '/contact-form-7',
+            $rest_prefix . '/elementor',
+            $rest_prefix . '/yoast',
         );
 
         foreach ($allowed_prefixes as $prefix) {
@@ -341,10 +361,27 @@ class ASP_SecurityFeatures
         }
     }
 
+    /**
+     * Check whether an .htaccess file currently contains a given WordPress marker.
+     *
+     * @param string $path   Absolute file path.
+     * @param string $marker Marker name.
+     * @return bool
+     */
+    private function htaccessHasMarker($path, $marker)
+    {
+        if (!file_exists($path) || !is_readable($path)) {
+            return false;
+        }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
+        $content = @file_get_contents($path);
+        return false !== $content && false !== strpos($content, '# BEGIN ' . $marker);
+    }
+
     public function disableDirectoryListing()
     {
-        // Only administrators may trigger filesystem writes.
-        if (!current_user_can('manage_options')) {
+        // Only administrators (Super Admins on Multisite) may modify root .htaccess.
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
@@ -383,20 +420,22 @@ class ASP_SecurityFeatures
      */
     public function removeDirectoryListingBlock()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
-        if (!function_exists('insert_with_markers')) {
-            require_once ABSPATH . 'wp-admin/includes/misc.php';
-        }
-
         $htaccess_path = ABSPATH . '.htaccess';
-        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
-            insert_with_markers($htaccess_path, 'Advanced Security Lite - Directory Listing', array());
+        $marker = 'Advanced Security Lite - Directory Listing';
+        if ($this->htaccessHasMarker($htaccess_path, $marker) && wp_is_writable($htaccess_path)) {
+            if (!function_exists('insert_with_markers')) {
+                require_once ABSPATH . 'wp-admin/includes/misc.php';
+            }
+            insert_with_markers($htaccess_path, $marker, array());
         }
 
-        delete_transient('asp_dir_listing_done');
+        if (false !== get_transient('asp_dir_listing_done')) {
+            delete_transient('asp_dir_listing_done');
+        }
     }
 
     public function restrictUploadMimes($mimes)
@@ -420,7 +459,11 @@ class ASP_SecurityFeatures
 
         // Block executable files (checks the final extension only, so
         // legitimate names like "my.photo.jpg" are still accepted).
-        $dangerous_extensions = array('exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js', 'jar', 'php');
+        $dangerous_extensions = array(
+            'exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js', 'jar',
+            'php', 'phtml', 'pht', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps',
+            'shtml', 'cgi', 'pl', 'py', 'sh', 'asp', 'aspx', 'jsp'
+        );
         $file_extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         if (in_array($file_extension, $dangerous_extensions, true)) {
@@ -478,6 +521,7 @@ class ASP_SecurityFeatures
             'invalid_username',
             'incorrect_password',
             'invalid_email',
+            'invalidcombo',
             'empty_username',
             'empty_password'
         );
@@ -514,6 +558,31 @@ class ASP_SecurityFeatures
         remove_action('wp_head', 'wp_generator');
     }
 
+    /**
+     * Strip ?ver=<wp_version> from enqueued core styles and scripts so the
+     * WordPress version is not exposed via asset query parameters.
+     *
+     * @param string $src Asset URL.
+     * @return string
+     */
+    public function removeWpVersionFromSrc($src)
+    {
+        if (!is_string($src) || '' === $src || false === strpos($src, 'ver=')) {
+            return $src;
+        }
+
+        global $wp_version;
+        if (!empty($wp_version)) {
+            $query = (string) parse_url($src, PHP_URL_QUERY);
+            parse_str($query, $args);
+            if (isset($args['ver']) && (string) $args['ver'] === (string) $wp_version) {
+                $src = remove_query_arg('ver', $src);
+            }
+        }
+
+        return $src;
+    }
+
 
     /**
      * Stable per-user hash used as the public author slug.
@@ -535,11 +604,18 @@ class ASP_SecurityFeatures
      */
     public function obfuscateAuthorSlugs($link, $author_id)
     {
+        $hash = $this->getAuthorHash($author_id);
+
+        // Plain permalinks use ?author=<id>; rewrite to ?author_name=<hash>.
+        if (false !== strpos($link, '?author=') || false !== strpos($link, '&author=')) {
+            return add_query_arg('author_name', $hash, remove_query_arg('author', $link));
+        }
+
         $parts = explode('/', untrailingslashit($link));
         if (count($parts) < 2) {
             return $link;
         }
-        $parts[count($parts) - 1] = $this->getAuthorHash($author_id);
+        $parts[count($parts) - 1] = $hash;
         return implode('/', $parts) . '/';
     }
 
@@ -575,13 +651,51 @@ class ASP_SecurityFeatures
 
     public function obfuscateEmails($content)
     {
+        if (!is_string($content) || '' === $content || false === strpos($content, '@')) {
+            return $content;
+        }
+
+        // Split HTML tags from text nodes so attributes like <img src="banner@2x.png">
+        // are never corrupted, while mailto: links and visible text emails are encoded.
+        $parts = preg_split('/(<[^>]+>)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!is_array($parts)) {
+            return $content;
+        }
+
         $pattern = '/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/';
-        return preg_replace_callback($pattern, array($this, 'encodeEmail'), $content);
+
+        foreach ($parts as $index => $part) {
+            if ('' === $part) {
+                continue;
+            }
+            if ('<' === $part[0]) {
+                // Inside an HTML tag: only encode mailto: addresses.
+                if (false !== stripos($part, 'mailto:')) {
+                    $parts[$index] = preg_replace_callback(
+                        '/mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i',
+                        function ($m) {
+                            return 'mailto:' . $this->encodeEmail(array($m[1], $m[1]));
+                        },
+                        $part
+                    );
+                }
+            } else {
+                $parts[$index] = preg_replace_callback($pattern, array($this, 'encodeEmail'), $part);
+            }
+        }
+
+        return implode('', $parts);
     }
 
     private function encodeEmail($matches)
     {
         $email = $matches[1];
+
+        // Skip Retina image suffixes (@2x.png) or static asset filenames.
+        if (preg_match('/\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico|css|js|woff2?)$/i', $email)) {
+            return $email;
+        }
+
         $encoded = '';
         for ($i = 0; $i < strlen($email); $i++) {
             $encoded .= '&#' . ord($email[$i]) . ';';
@@ -603,6 +717,12 @@ class ASP_SecurityFeatures
         // Block user enumeration via REST API
         add_filter('rest_endpoints', array($this, 'disableUsersEndpoint'));
 
+        // Block user enumeration via WordPress 5.5+ core XML sitemaps (/wp-sitemap-users-1.xml)
+        add_filter('wp_sitemaps_add_provider', array($this, 'disableUsersSitemap'), 10, 2);
+
+        // Block author username/URL disclosure via oEmbed responses
+        add_filter('oembed_response_data', array($this, 'removeOembedAuthorData'), 10, 1);
+
         // Block author query vars early (before core's canonical redirect
         // leaks the username in the Location header).
         add_action('parse_query', array($this, 'blockAuthorQueryVars'));
@@ -612,6 +732,22 @@ class ASP_SecurityFeatures
 
         // Block user enumeration via login attempts
         add_filter('authenticate', array($this, 'blockUserEnumLogin'), 30, 3);
+    }
+
+    public function disableUsersSitemap($provider, $name)
+    {
+        if ('users' === $name) {
+            return false;
+        }
+        return $provider;
+    }
+
+    public function removeOembedAuthorData($data)
+    {
+        if (is_array($data)) {
+            unset($data['author_name'], $data['author_url']);
+        }
+        return $data;
     }
 
     /**
@@ -687,11 +823,14 @@ class ASP_SecurityFeatures
         // Hide existing comments
         add_filter('comments_array', '__return_empty_array', 10, 2);
 
+        // Hide comments REST API endpoints
+        add_filter('rest_endpoints', array($this, 'disableCommentsEndpoints'));
+
         // Remove comments page in menu
         add_action('admin_menu', array($this, 'removeCommentsPage'));
 
-        // Remove comments links from admin bar
-        add_action('init', array($this, 'removeCommentsAdminBar'));
+        // Remove comments node from admin bar (must run on admin_bar_menu)
+        add_action('admin_bar_menu', array($this, 'removeCommentsAdminBar'), 999);
 
         // Remove comments metaboxes from dashboard
         add_action('admin_init', array($this, 'removeCommentsMetaboxes'));
@@ -700,15 +839,21 @@ class ASP_SecurityFeatures
         add_action('admin_init', array($this, 'disableCommentsPostTypes'));
     }
 
+    public function disableCommentsEndpoints($endpoints)
+    {
+        unset($endpoints['/wp/v2/comments'], $endpoints['/wp/v2/comments/(?P<id>[\d]+)']);
+        return $endpoints;
+    }
+
     public function removeCommentsPage()
     {
         remove_menu_page('edit-comments.php');
     }
 
-    public function removeCommentsAdminBar()
+    public function removeCommentsAdminBar($wp_admin_bar = null)
     {
-        if (is_admin_bar_showing()) {
-            remove_action('admin_bar_menu', 'wp_admin_bar_comments_menu', 60);
+        if (is_object($wp_admin_bar) && method_exists($wp_admin_bar, 'remove_node')) {
+            $wp_admin_bar->remove_node('comments');
         }
     }
 
@@ -793,6 +938,18 @@ class ASP_SecurityFeatures
             }
         }
         return $link;
+    }
+
+    public function hideAdminOembedAuthor($data, $post)
+    {
+        if (is_array($data) && is_object($post) && isset($post->post_author)) {
+            $user = get_userdata((int) $post->post_author);
+            if ($user && in_array('administrator', (array) $user->roles, true)) {
+                $data['author_name'] = __('Author', 'advanced-security-lite');
+                $data['author_url'] = home_url();
+            }
+        }
+        return $data;
     }
 
     // Feature #14: Maintenance Mode
@@ -990,25 +1147,27 @@ class ASP_SecurityFeatures
             return;
         }
 
-        if (!function_exists('insert_with_markers')) {
-            require_once ABSPATH . 'wp-admin/includes/misc.php';
-        }
-
         $upload_dir = wp_upload_dir();
         $htaccess_path = trailingslashit($upload_dir['basedir']) . '.htaccess';
+        $marker = 'Advanced Security Lite - Disable PHP Execution';
 
-        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
-            insert_with_markers($htaccess_path, 'Advanced Security Lite - Disable PHP Execution', array());
+        if ($this->htaccessHasMarker($htaccess_path, $marker) && wp_is_writable($htaccess_path)) {
+            if (!function_exists('insert_with_markers')) {
+                require_once ABSPATH . 'wp-admin/includes/misc.php';
+            }
+            insert_with_markers($htaccess_path, $marker, array());
         }
 
-        delete_transient('asp_php_execution_disabled');
+        if (false !== get_transient('asp_php_execution_disabled')) {
+            delete_transient('asp_php_execution_disabled');
+        }
     }
 
     // Feature #17: Protect sensitive files (wp-config.php, .htaccess, etc.)
     public function protectSensitiveFiles()
     {
-        // Only administrators may trigger filesystem writes.
-        if (!current_user_can('manage_options')) {
+        // Only administrators (Super Admins on Multisite) may modify root .htaccess.
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
@@ -1124,19 +1283,21 @@ class ASP_SecurityFeatures
      */
     public function removeSensitiveFilesBlock()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
-        if (!function_exists('insert_with_markers')) {
-            require_once ABSPATH . 'wp-admin/includes/misc.php';
-        }
-
         $htaccess_path = ABSPATH . '.htaccess';
-        if (file_exists($htaccess_path) && wp_is_writable($htaccess_path)) {
-            insert_with_markers($htaccess_path, 'Advanced Security Lite - Sensitive Files Protection', array());
+        $marker = 'Advanced Security Lite - Sensitive Files Protection';
+        if ($this->htaccessHasMarker($htaccess_path, $marker) && wp_is_writable($htaccess_path)) {
+            if (!function_exists('insert_with_markers')) {
+                require_once ABSPATH . 'wp-admin/includes/misc.php';
+            }
+            insert_with_markers($htaccess_path, $marker, array());
         }
 
-        delete_transient('asp_sensitive_files_protected');
+        if (false !== get_transient('asp_sensitive_files_protected')) {
+            delete_transient('asp_sensitive_files_protected');
+        }
     }
 }

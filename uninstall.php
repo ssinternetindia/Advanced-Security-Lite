@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced Security Lite - Uninstall Script
+ * SS Sentinel - Uninstall Script
  *
  * This file is executed when the plugin is deleted via WordPress admin.
  * It removes all plugin data from the database and reverts .htaccess

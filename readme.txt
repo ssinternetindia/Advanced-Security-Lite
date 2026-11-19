@@ -1,20 +1,20 @@
-=== Advanced Security Lite ===
-Contributors: Anuj Kumar Singh
+=== SS Sentinel – Lightweight Security, CAPTCHA & Firewall ===
+Contributors: SS Internet Services
 Tags: security, firewall, hardening, login, captcha, recaptcha, maintenance
 Requires at least: 5.8
 Tested up to: 7.1.4
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A powerful WordPress security plugin featuring a clean admin interface and advanced protection tools to safeguard your website from threats.
+A powerful free WordPress security plugin featuring a clean admin interface and advanced protection tools to safeguard your website from threats.
 
 == Description ==
 
-**Advanced Security Lite** is a powerful, lightweight security plugin designed to protect your WordPress website from common threats, brute force attacks, and vulnerabilities. It ships with a clean, WordPress-native admin interface, color-coded navigation, a live Security Score, and a dedicated Status tab — enterprise-grade security features without bloating your site.
+**SS Sentinel** is a powerful, lightweight security plugin designed to protect your WordPress website from common threats, brute force attacks, and vulnerabilities. It ships with a clean, WordPress-native admin interface, color-coded navigation, a live Security Score, and a dedicated Status tab — enterprise-grade security features without bloating your site.
 
-### Why Choose Advanced Security Lite?
+### Why Choose SS Sentinel?
 
 *   **Clean Interface**: A flat, WordPress-native admin UI with color-coded Phosphor icons, sidebar navigation, and a live Security Score.
 *   **Lightweight**: Optimized for performance, ensuring your site remains fast while being secure.
@@ -72,7 +72,7 @@ A powerful WordPress security plugin featuring a clean admin interface and advan
 
 1. Upload the `advanced-security-lite` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Navigate to **Security Lite** in the admin menu to configure your settings.
+3. Navigate to **SS Sentinel** in the admin menu to configure your settings.
 
 == Frequently Asked Questions ==
 
@@ -99,6 +99,20 @@ Yes — enable "Hide Admin Notices" in the General tab. Hidden notices are liste
 4. **Status**: Detailed server and WordPress environment information.
 
 == Changelog ==
+
+= 1.0.3 =
+
+Added & Changed
+* Rebranded to **SS Sentinel – Lightweight Security, CAPTCHA & Firewall** (preserving all filenames, slugs, options, and `.htaccess` markers for seamless upgrades).
+* Updated Salt Regeneration popup with **Re-login Now** and **Later** options and fixed the PHP 8+ fatal error in `WP_Session_Tokens` session clearing.
+* Included Login Attempt Rate Limiting in the Bento Dashboard Security Score and Recommendations, and unified the Header status badge with the Dashboard score.
+
+Security & Reliability
+* Closed REST API `?rest_route=` query-parameter bypass and supported custom `rest_get_url_prefix()`.
+* Hardened login rate limiting (priority 5) and CAPTCHA verification (priority 15) with priority-99 enforcement and non-interactive auth exemptions (REST Application Passwords, WP-CLI, Cron).
+* Fixed reCAPTCHA v3 comment form submission (`HTMLFormElement.prototype.submit`), added 3-way mutual exclusion across all CAPTCHA engines, and added back links on comment CAPTCHA errors.
+* Hardened Password Recovery blocking, XML-RPC method blocking, Core XML Sitemaps & oEmbed user-enumeration blocking, and `?ver=` WordPress version stripping on enqueued assets.
+* Fixed `register_activation_hook` timing, `.htaccess` cleanup on deactivation and toggle-off without per-request rewrites, Multisite Super Admin guards, salt regex for embedded quotes, safe email obfuscation for Retina `@2x` images, SVG XSS upload scanning, and `wp_commentmeta` spam cleanup.
 
 = 1.0.2 =
 
@@ -152,6 +166,9 @@ Changed
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Rebranded to SS Sentinel with major security hardening, PHP 8+ salt regeneration fix, reCAPTCHA v3 comment fix, and Multisite protections.
 
 = 1.0.2 =
 Fixes login rate-limiting across non-UTC timezones, hardens `.htaccess` uninstall/toggle cleanup and salt regeneration, and reduces `wp_options` autoload bloat.

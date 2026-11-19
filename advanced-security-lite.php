@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Advanced Security Lite
+ * Plugin Name: SS Sentinel – Lightweight Security, CAPTCHA & Firewall
  * Plugin URI: https://ssinternet.in/products/wordpress-plugins/advanced-security-lite
- * Description: A powerful WordPress security plugin featuring a modern, intuitive interface and advanced protection tools to safeguard your website from threats.
- * Version: 1.0.2
- * Author: Anuj Kumar Singh
+ * Description: A powerful free WordPress security plugin featuring a modern, intuitive interface and advanced protection tools to safeguard your website from threats.
+ * Version: 1.0.3
+ * Author: SS Internet Services
  * Author URI: https://ssinternet.in/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -29,33 +29,29 @@ function asp_check_requirements()
     $min_php_version = '7.4';
     $current_php_version = phpversion();
 
-    $errors = array();
+    $wp_too_old = version_compare($wp_version, $min_wp_version, '<');
+    $php_too_old = version_compare($current_php_version, $min_php_version, '<');
 
-    // Check WordPress version
-    if (version_compare($wp_version, $min_wp_version, '<')) {
-        $errors[] = sprintf(
-            /* translators: 1: Required WordPress version, 2: Current WordPress version */
-            esc_html__('Advanced Security Lite requires WordPress %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
-            $min_wp_version,
-            esc_html($wp_version)
-        );
-    }
-
-    // Check PHP version
-    if (version_compare($current_php_version, $min_php_version, '<')) {
-        $errors[] = sprintf(
-            /* translators: 1: Required PHP version, 2: Current PHP version */
-            esc_html__('Advanced Security Lite requires PHP %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
-            $min_php_version,
-            esc_html($current_php_version)
-        );
-    }
-
-    // Display errors if any
-    if (!empty($errors)) {
-        add_action('admin_notices', function () use ($errors) {
-            foreach ($errors as $error) {
-                echo '<div class="notice notice-error"><p><strong>Advanced Security Lite:</strong> ' . esc_html($error) . '</p></div>';
+    // Display errors if any (defer translation calls to admin_notices after init)
+    if ($wp_too_old || $php_too_old) {
+        add_action('admin_notices', function () use ($wp_too_old, $php_too_old, $min_wp_version, $wp_version, $min_php_version, $current_php_version) {
+            if ($wp_too_old) {
+                $msg = sprintf(
+                    /* translators: 1: Required WordPress version, 2: Current WordPress version */
+                    esc_html__('SS Sentinel requires WordPress %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
+                    $min_wp_version,
+                    esc_html($wp_version)
+                );
+                echo '<div class="notice notice-error"><p><strong>SS Sentinel:</strong> ' . esc_html($msg) . '</p></div>';
+            }
+            if ($php_too_old) {
+                $msg = sprintf(
+                    /* translators: 1: Required PHP version, 2: Current PHP version */
+                    esc_html__('SS Sentinel requires PHP %1$s or higher. You are running version %2$s.', 'advanced-security-lite'),
+                    $min_php_version,
+                    esc_html($current_php_version)
+                );
+                echo '<div class="notice notice-error"><p><strong>SS Sentinel:</strong> ' . esc_html($msg) . '</p></div>';
             }
         });
 
@@ -156,8 +152,8 @@ if (!class_exists('AdvancedSecurityLite')) {
         public function addAdminMenu()
         {
             add_menu_page(
-                __('Advanced Security Lite', 'advanced-security-lite'),
-                __('Security Lite', 'advanced-security-lite'),
+                __('SS Sentinel', 'advanced-security-lite'),
+                __('SS Sentinel', 'advanced-security-lite'),
                 'manage_options',
                 'advanced-security-lite',
                 array($this, 'adminPage'),
@@ -205,9 +201,10 @@ if (!class_exists('AdvancedSecurityLite')) {
                     'resetConfirm' => __('⚠️ EMERGENCY RESET\n\nThis will reset all security settings to defaults.\n\nContinue?', 'advanced-security-lite'),
                     'resetting' => __('Resetting...', 'advanced-security-lite'),
                     'resetComplete' => __('Reset complete! Reloading...', 'advanced-security-lite'),
-                    'modalTitle' => __('Security Update Complete', 'advanced-security-lite'),
-                    'redirectingIn' => __('Redirecting in %d seconds...', 'advanced-security-lite'),
-                    'loginNow' => __('Login Now', 'advanced-security-lite'),
+                    'modalTitle' => __('Salt Keys Updated', 'advanced-security-lite'),
+                    'saltReloginHint' => __('All active sessions have been invalidated. You can re-login immediately or sign in later.', 'advanced-security-lite'),
+                    'loginNow' => __('Re-login Now', 'advanced-security-lite'),
+                    'loginLater' => __('Later', 'advanced-security-lite'),
                     'protectedText' => __('Protected', 'advanced-security-lite'),
                     'partialText' => __('Partial', 'advanced-security-lite'),
                     'unprotectedText' => __('Unprotected', 'advanced-security-lite'),
@@ -223,7 +220,10 @@ if (!class_exists('AdvancedSecurityLite')) {
                     'downloadLabel' => __('Download', 'advanced-security-lite'),
                     'clearLabel' => __('Clear', 'advanced-security-lite'),
                     'clearLogConfirm' => __('Are you sure you want to permanently clear this log file?', 'advanced-security-lite'),
-                    'logCleared' => __('Log cleared.', 'advanced-security-lite')
+                    'logCleared' => __('Log cleared.', 'advanced-security-lite'),
+                    'saveAll' => __('Save All Settings', 'advanced-security-lite'),
+                    'copied' => __('Copied!', 'advanced-security-lite'),
+                    'noSearchMatches' => __('No matching settings found.', 'advanced-security-lite')
                 )
             ));
 
@@ -451,7 +451,7 @@ JS;
             foreach ($files as $file) {
                 if (!file_exists($file)) {
                     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                    error_log('Advanced Security Lite: Missing file - ' . $file);
+                    error_log('SS Sentinel: Missing file - ' . $file);
                     return;
                 }
             }
@@ -480,9 +480,14 @@ JS;
                 if (class_exists('ASP_Enhancements')) {
                     new ASP_Enhancements();
                 }
+
+                // Self-heal recurring log cleanup cron if missing.
+                if (!wp_next_scheduled('asp_cleanup_old_logs')) {
+                    wp_schedule_event(time(), 'daily', 'asp_cleanup_old_logs');
+                }
             } catch (\Throwable $e) {
                 // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('Advanced Security Lite: Error initializing features - ' . $e->getMessage());
+                error_log('SS Sentinel: Error initializing features - ' . $e->getMessage());
             }
         }
 
@@ -527,6 +532,29 @@ JS;
             wp_clear_scheduled_hook('asp_cleanup_old_logs');
             wp_clear_scheduled_hook('asp_optimize_database');
 
+            // Remove .htaccess marker blocks while the plugin is deactivated
+            // and clear their 24h rate-limit transients so re-activation re-applies them cleanly.
+            if (!function_exists('insert_with_markers')) {
+                require_once ABSPATH . 'wp-admin/includes/misc.php';
+            }
+
+            $root_htaccess = ABSPATH . '.htaccess';
+            if (file_exists($root_htaccess) && wp_is_writable($root_htaccess)) {
+                insert_with_markers($root_htaccess, 'Advanced Security Lite - Directory Listing', array());
+                insert_with_markers($root_htaccess, 'Advanced Security Lite - Sensitive Files Protection', array());
+            }
+
+            $upload_dir = wp_upload_dir();
+            $uploads_basedir = isset($upload_dir['basedir']) ? $upload_dir['basedir'] : '';
+            $uploads_htaccess = '' !== $uploads_basedir ? trailingslashit($uploads_basedir) . '.htaccess' : '';
+            if ('' !== $uploads_htaccess && file_exists($uploads_htaccess) && wp_is_writable($uploads_htaccess)) {
+                insert_with_markers($uploads_htaccess, 'Advanced Security Lite - Disable PHP Execution', array());
+            }
+
+            delete_transient('asp_dir_listing_done');
+            delete_transient('asp_sensitive_files_protected');
+            delete_transient('asp_php_execution_disabled');
+
             // Flush rewrite rules
             flush_rewrite_rules();
         }
@@ -534,17 +562,18 @@ JS;
     }
 }
 
-// Safe plugin initialization - only after WordPress is loaded
+// Instantiate at top-level file scope so register_activation_hook() and
+// register_deactivation_hook() are registered before activate_plugin() fires
+// the activation hook (plugins_loaded has already fired by the time WordPress
+// includes a newly activated plugin file).
 if (!function_exists('asp_safe_init')) {
     function asp_safe_init()
     {
-        // Initialize the plugin
-        AdvancedSecurityLite::getInstance();
+        return AdvancedSecurityLite::getInstance();
     }
 }
 
-// Hook into WordPress initialization
-add_action('plugins_loaded', 'asp_safe_init', 1);
+asp_safe_init();
 
 // Recurring log cleanup: scheduled at activation (and cleared on
 // deactivation); only the handler is registered here.
@@ -559,9 +588,16 @@ function asp_cleanup_logs_older_than_3_days()
 
     // Cleanup failed logins
     $failed_logins = get_option('asp_failed_logins', array());
+    if (!is_array($failed_logins)) {
+        $failed_logins = array();
+    }
     foreach ($failed_logins as $ip => $attempts) {
+        if (!is_array($attempts)) {
+            unset($failed_logins[$ip]);
+            continue;
+        }
         $failed_logins[$ip] = array_filter($attempts, function ($attempt) use ($three_days_ago) {
-            return isset($attempt['time']) && $attempt['time'] > $three_days_ago;
+            return is_array($attempt) && isset($attempt['time']) && (int) $attempt['time'] > $three_days_ago;
         });
         if (empty($failed_logins[$ip])) {
             unset($failed_logins[$ip]);
@@ -571,10 +607,23 @@ function asp_cleanup_logs_older_than_3_days()
 
     // Cleanup admin access log
     $admin_log = get_option('asp_admin_access_log', array());
+    if (!is_array($admin_log)) {
+        $admin_log = array();
+    }
     $admin_log = array_filter($admin_log, function ($entry) use ($three_days_ago) {
-        return isset($entry['time']) && $entry['time'] > $three_days_ago;
+        return is_array($entry) && isset($entry['time']) && (int) $entry['time'] > $three_days_ago;
     });
     update_option('asp_admin_access_log', array_values($admin_log), false);
+}
+
+/**
+ * Capability check for network-wide system actions (wp-config.php, server error logs).
+ *
+ * @return bool
+ */
+function asp_can_manage_system()
+{
+    return current_user_can('manage_options') && (!is_multisite() || is_super_admin());
 }
 
 // AJAX handlers - register after WordPress is loaded
@@ -791,7 +840,7 @@ function asp_get_error_logs()
     }
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !asp_can_manage_system()) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -823,7 +872,7 @@ function asp_read_error_log()
     }
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !asp_can_manage_system()) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -856,7 +905,7 @@ function asp_clear_error_log()
     }
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !asp_can_manage_system()) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -888,7 +937,7 @@ function asp_clear_error_log()
  */
 function asp_download_error_log()
 {
-    if (!current_user_can('manage_options')) {
+    if (!asp_can_manage_system()) {
         wp_die(esc_html__('You are not allowed to do that.', 'advanced-security-lite'));
     }
 
@@ -946,54 +995,54 @@ function asp_download_error_log()
 function asp_get_settings_schema()
 {
     return array(
-        'recaptcha_v2_enabled'         => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'recaptcha_v3_enabled'         => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'image_captcha_enabled'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'recaptcha_site_key'           => array('default' => '', 'type' => 'string', 'min' => null, 'max' => null),
-        'recaptcha_secret_key'         => array('default' => '', 'type' => 'string', 'min' => null, 'max' => null),
-        'disable_wp_json'              => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_feeds'                => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_rest_api'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_registration'         => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_password_recovery'    => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'auto_regenerate_salts'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'salt_regeneration_frequency'  => array('default' => 'monthly', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('daily', 'weekly', 'monthly')),
-        'disable_xmlrpc'               => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_bad_requests'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_dir_listing'         => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_malicious_uploads'   => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_plugin_upload'       => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_theme_upload'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disallow_file_edit'           => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'hide_login_errors'            => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'hide_php_version'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'hide_wp_version'              => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'obfuscate_author_slugs'       => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'obfuscate_emails'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'hide_admin_username'          => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'protect_headers'              => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'prevent_user_enumeration'     => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_comments'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_pingbacks'            => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'disable_app_passwords'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'hide_admin_notices'           => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'error_log_viewer'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'login_accent_color'           => array('default' => '#2563eb', 'type' => 'string', 'min' => null, 'max' => null),
-        'login_panel_side'             => array('default' => 'left', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('left', 'right', 'none')),
-        'login_form_style'             => array('default' => 'solid', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('solid', 'glass')),
-        'login_logo'                   => array('default' => '', 'type' => 'string', 'min' => null, 'max' => null),
-        'custom_login_design'          => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'enable_login_limit'           => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'max_login_attempts'           => array('default' => 5, 'type' => 'int', 'min' => 1, 'max' => 100),
-        'lockout_duration'             => array('default' => 30, 'type' => 'int', 'min' => 1, 'max' => 1440),
-        'maintenance_mode'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'maintenance_message'          => array('default' => 'We are currently performing scheduled maintenance. Please check back soon.', 'type' => 'textarea', 'min' => null, 'max' => null),
-        'limit_revisions'              => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'revisions_limit'              => array('default' => 5, 'type' => 'int', 'min' => 1, 'max' => 100),
-        'disable_php_execution'        => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'protect_sensitive_files'      => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'remove_data_on_uninstall'     => array('default' => 1, 'type' => 'bool', 'min' => null, 'max' => null),
-        'auto_delete_spam'             => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'recaptcha_v2_enabled' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'recaptcha_v3_enabled' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'image_captcha_enabled' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'recaptcha_site_key' => array('default' => '', 'type' => 'string', 'min' => null, 'max' => null),
+        'recaptcha_secret_key' => array('default' => '', 'type' => 'string', 'min' => null, 'max' => null),
+        'disable_wp_json' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_feeds' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_rest_api' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_registration' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_password_recovery' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'auto_regenerate_salts' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'salt_regeneration_frequency' => array('default' => 'monthly', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('daily', 'weekly', 'monthly')),
+        'disable_xmlrpc' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_bad_requests' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_dir_listing' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_malicious_uploads' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_plugin_upload' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_theme_upload' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disallow_file_edit' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'hide_login_errors' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'hide_php_version' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'hide_wp_version' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'obfuscate_author_slugs' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'obfuscate_emails' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'hide_admin_username' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'protect_headers' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'prevent_user_enumeration' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_comments' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_pingbacks' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'disable_app_passwords' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'hide_admin_notices' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'error_log_viewer' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'login_accent_color' => array('default' => '#2563eb', 'type' => 'hex', 'min' => null, 'max' => null),
+        'login_panel_side' => array('default' => 'left', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('left', 'right', 'none')),
+        'login_form_style' => array('default' => 'solid', 'type' => 'enum', 'min' => null, 'max' => null, 'values' => array('solid', 'glass')),
+        'login_logo' => array('default' => '', 'type' => 'url', 'min' => null, 'max' => null),
+        'custom_login_design' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'enable_login_limit' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'max_login_attempts' => array('default' => 5, 'type' => 'int', 'min' => 1, 'max' => 100),
+        'lockout_duration' => array('default' => 30, 'type' => 'int', 'min' => 1, 'max' => 1440),
+        'maintenance_mode' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'maintenance_message' => array('default' => 'We are currently performing scheduled maintenance. Please check back soon.', 'type' => 'textarea', 'min' => null, 'max' => null),
+        'limit_revisions' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'revisions_limit' => array('default' => 5, 'type' => 'int', 'min' => 1, 'max' => 100),
+        'disable_php_execution' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'protect_sensitive_files' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
+        'remove_data_on_uninstall' => array('default' => 1, 'type' => 'bool', 'min' => null, 'max' => null),
+        'auto_delete_spam' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
     );
 }
 
@@ -1024,6 +1073,12 @@ function asp_sanitize_setting($value, $rule)
             return in_array($v, $valid, true) ? $v : $rule['default'];
         case 'email':
             return sanitize_email(wp_unslash($value));
+        case 'url':
+            $url = trim((string) wp_unslash($value));
+            return '' === $url ? '' : esc_url_raw($url, array('http', 'https'));
+        case 'hex':
+            $hex = sanitize_hex_color(trim((string) wp_unslash($value)));
+            return $hex ? strtolower($hex) : $rule['default'];
         case 'textarea':
             return sanitize_textarea_field(wp_unslash($value));
         default:
@@ -1071,8 +1126,11 @@ function asp_save_settings()
         }
     }
 
-    // Keep reCAPTCHA v2 and v3 mutually exclusive in stored options.
-    if (get_option('asp_recaptcha_v2_enabled', 0) && get_option('asp_recaptcha_v3_enabled', 0)) {
+    // Keep CAPTCHA engines mutually exclusive in stored options (at most one active).
+    if (get_option('asp_image_captcha_enabled', 0)) {
+        update_option('asp_recaptcha_v2_enabled', 0);
+        update_option('asp_recaptcha_v3_enabled', 0);
+    } elseif (get_option('asp_recaptcha_v2_enabled', 0) && get_option('asp_recaptcha_v3_enabled', 0)) {
         update_option('asp_recaptcha_v2_enabled', 0);
     }
 
@@ -1154,7 +1212,7 @@ function asp_regenerate_wp_config_salts()
     foreach ($salts as $salt) {
         $new_salt = wp_generate_password(64, true, true);
         $escaped_salt = addcslashes($new_salt, "'\\");
-        $pattern = "/define\s*\(\s*['\"]" . preg_quote($salt, '/') . "['\"]\s*,\s*['\"][^'\"]*['\"]\s*\)\s*;/";
+        $pattern = "/define\s*\(\s*['\"]" . preg_quote($salt, '/') . "['\"]\s*,\s*(?:'(?:\\\\.|[^'\\\\])*'|\"(?:\\\\.|[^\"\\\\])*\")\s*\)\s*;/";
         // preg_replace_callback (not preg_replace) is required here: $new_salt
         // can legitimately contain a "$" followed by digits, and preg_replace()
         // would misinterpret that sequence as a backreference (e.g. "$3"),
@@ -1218,9 +1276,20 @@ function asp_regenerate_wp_config_salts()
         $backup_path = '';
     }
 
-    // Force logout for every user by destroying all session tokens.
-    if (class_exists('WP_Session_Tokens')) {
-        WP_Session_Tokens::destroy_all_sessions();
+    // Force logout for every user by clearing stored session tokens safely
+    // (WP_Session_Tokens::destroy_all_sessions() is protected; the public
+    // static entry point in WP core is destroy_all_for_all_users()).
+    if (class_exists('WP_Session_Tokens') && method_exists('WP_Session_Tokens', 'destroy_all_for_all_users')) {
+        WP_Session_Tokens::destroy_all_for_all_users();
+    } else {
+        global $wpdb;
+        if (isset($wpdb) && !empty($wpdb->usermeta)) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            $wpdb->delete($wpdb->usermeta, array('meta_key' => 'session_tokens'));
+        }
+        if (class_exists('WP_Session_Tokens') && get_current_user_id() > 0) {
+            WP_Session_Tokens::get_instance(get_current_user_id())->destroy_all();
+        }
     }
     wp_clear_auth_cookie();
 
@@ -1239,7 +1308,7 @@ function asp_regenerate_salts_now()
 
     // Verify nonce and capabilities
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
-    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'asp_nonce') || !asp_can_manage_system()) {
         wp_send_json_error('Security check failed');
         return;
     }
@@ -1252,7 +1321,7 @@ function asp_regenerate_salts_now()
     }
 
     wp_send_json_success(array(
-        'message' => __('Salt keys regenerated successfully. All users have been logged out for security.', 'advanced-security-lite'),
+        'message' => __('WordPress salt keys have been updated successfully.', 'advanced-security-lite'),
         'logout' => true,
         'redirect_url' => wp_login_url()
     ));
@@ -1275,6 +1344,19 @@ function asp_emergency_reset()
     // Reset all options to schema defaults — single source of truth.
     foreach (asp_get_settings_schema() as $key => $rule) {
         update_option('asp_' . $key, $rule['default']);
+    }
+
+    // Lift any active login lockouts (both object cache and wp_options).
+    global $wpdb;
+    $failed_logins = (array) get_option('asp_failed_logins', array());
+    foreach (array_keys($failed_logins) as $locked_ip) {
+        delete_transient('asp_lock_' . md5($locked_ip));
+    }
+    if (isset($wpdb) && !empty($wpdb->options)) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_asp\_lock\_%'");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_timeout\_asp\_lock\_%'");
     }
 
     // Clear scheduled events
@@ -1326,9 +1408,14 @@ function asp_clear_all_logs()
     // button appears broken.
     set_transient('asp_suppress_access_log', 1, 30);
 
-    // Lift any active login lockouts so clearing also means unlocking.
+    // Lift any active login lockouts (both object cache and wp_options).
+    foreach (array_keys($failed_logins) as $locked_ip) {
+        delete_transient('asp_lock_' . md5($locked_ip));
+    }
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_asp\_lock\_%'");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_timeout\_asp\_lock\_%'");
 
     wp_send_json_success(array(
         'message' => __('All logs have been cleared successfully.', 'advanced-security-lite'),

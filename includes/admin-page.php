@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
             <div class="asl-brand">
                 <span class="asl-brand-icon"><i class="ph ph-shield-check"></i></span>
                 <div class="asl-brand-text">
-                    <h1><?php echo esc_html(ASP_NAME); ?></h1>
+                    <h1><?php esc_html_e('SS Sentinel', 'advanced-security-lite'); ?></h1>
                     <span class="asl-version">v<?php echo esc_html(ASP_VERSION); ?></span>
                 </div>
             </div>
@@ -22,25 +22,44 @@ if (!defined('ABSPATH')) {
                 <i class="ph ph-key"></i> <?php esc_html_e('Regenerate Salts', 'advanced-security-lite'); ?>
             </button>
             <?php
-            // Calculate security score
-            $enabled_features = count(array_filter([
+            // Single source of truth for both the Header badge and Dashboard Bento score.
+            $cat_core = array(
                 get_option('asp_disable_wp_json', 0),
                 get_option('asp_disable_xmlrpc', 0),
-                get_option('asp_hide_wp_version', 0),
-                get_option('asp_disallow_file_edit', 0),
-                get_option('asp_protect_headers', 0),
+                get_option('asp_disable_rest_api', 0),
                 get_option('asp_auto_regenerate_salts', 0),
+            );
+            $cat_auth = array(
                 get_option('asp_recaptcha_v2_enabled', 0) || get_option('asp_recaptcha_v3_enabled', 0) || get_option('asp_image_captcha_enabled', 0),
+                get_option('asp_hide_login_errors', 0),
+                get_option('asp_enable_login_limit', 0),
+                get_option('asp_disable_app_passwords', 0),
+            );
+            $cat_firewall = array(
                 get_option('asp_disallow_bad_requests', 0),
                 get_option('asp_prevent_user_enumeration', 0),
-                get_option('asp_hide_login_errors', 0)
-            ]));
+                get_option('asp_disallow_malicious_uploads', 0),
+            );
+            $cat_hardening = array(
+                get_option('asp_hide_wp_version', 0),
+                get_option('asp_hide_php_version', 0),
+                get_option('asp_disallow_file_edit', 0),
+                get_option('asp_protect_headers', 0),
+                get_option('asp_obfuscate_author_slugs', 0),
+                get_option('asp_disable_php_execution', 0),
+                get_option('asp_protect_sensitive_files', 0),
+            );
 
-            if ($enabled_features >= 5) {
+            $security_features = array_merge($cat_core, $cat_auth, $cat_firewall, $cat_hardening);
+            $total_features = count($security_features);
+            $enabled_count = count(array_filter($security_features));
+            $security_score = round(($enabled_count / $total_features) * 100);
+
+            if ($security_score >= 60) {
                 $status_class = 'asl-status-protected';
                 $status_text = __('Protected', 'advanced-security-lite');
                 $status_icon = '<i class="ph ph-check"></i>';
-            } elseif ($enabled_features >= 2) {
+            } elseif ($security_score >= 30) {
                 $status_class = 'asl-status-partial';
                 $status_text = __('Partial', 'advanced-security-lite');
                 $status_icon = '<i class="ph ph-warning"></i>';
@@ -150,38 +169,7 @@ if (!defined('ABSPATH')) {
             <!-- Dashboard Panel -->
             <div id="panel-dashboard" class="asl-panel active">
                 <?php
-                // Category breakdowns for Bento score card
-                $cat_core = array(
-                    get_option('asp_disable_wp_json', 0),
-                    get_option('asp_disable_xmlrpc', 0),
-                    get_option('asp_disable_rest_api', 0),
-                    get_option('asp_auto_regenerate_salts', 0),
-                );
-                $cat_auth = array(
-                    get_option('asp_recaptcha_v2_enabled', 0) || get_option('asp_recaptcha_v3_enabled', 0) || get_option('asp_image_captcha_enabled', 0),
-                    get_option('asp_hide_login_errors', 0),
-                    get_option('asp_disable_app_passwords', 0),
-                );
-                $cat_firewall = array(
-                    get_option('asp_disallow_bad_requests', 0),
-                    get_option('asp_prevent_user_enumeration', 0),
-                    get_option('asp_disallow_malicious_uploads', 0),
-                );
-                $cat_hardening = array(
-                    get_option('asp_hide_wp_version', 0),
-                    get_option('asp_hide_php_version', 0),
-                    get_option('asp_disallow_file_edit', 0),
-                    get_option('asp_protect_headers', 0),
-                    get_option('asp_obfuscate_author_slugs', 0),
-                    get_option('asp_disable_php_execution', 0),
-                    get_option('asp_protect_sensitive_files', 0),
-                );
-
-                $security_features = array_merge($cat_core, $cat_auth, $cat_firewall, $cat_hardening);
-                $total_features = count($security_features);
-                $enabled_count = count(array_filter($security_features));
-                $security_score = round(($enabled_count / $total_features) * 100);
-
+                // Category breakdowns (reusing the unified feature arrays computed in header)
                 $cat_bars = array(
                     array('label' => __('Core', 'advanced-security-lite'), 'done' => count(array_filter($cat_core)), 'total' => count($cat_core)),
                     array('label' => __('Auth', 'advanced-security-lite'), 'done' => count(array_filter($cat_auth)), 'total' => count($cat_auth)),
@@ -377,6 +365,16 @@ if (!defined('ABSPATH')) {
                             <?php endif; ?>
 
                             <?php // Login Security ?>
+                            <?php if (!get_option('asp_enable_login_limit', 0)):
+                                $warning_count++; ?>
+                                <li class="asl-check-warning">
+                                    <span class="asl-check-icon"><i class="ph ph-warning"></i></span>
+                                    <span><?php esc_html_e('Enable login attempt rate limiting to block brute-force attacks', 'advanced-security-lite'); ?></span>
+                                    <a href="#authentication" class="asl-rec-link"
+                                        data-tab="authentication"><?php esc_html_e('Fix →', 'advanced-security-lite'); ?></a>
+                                </li>
+                            <?php endif; ?>
+
                             <?php if (!get_option('asp_hide_login_errors', 0)):
                                 $warning_count++; ?>
                                 <li class="asl-check-warning">
@@ -1174,13 +1172,19 @@ if (!defined('ABSPATH')) {
                     </div>
                     <div class="asl-card-body">
                         <?php
-                        $failed_logins = get_option('asp_failed_logins', array());
+                        $failed_logins = (array) get_option('asp_failed_logins', array());
                         $has_attempts = false;
 
                         // Flatten all attempts into a single array with IP info
                         $all_attempts = array();
                         foreach ($failed_logins as $ip => $attempts) {
+                            if (!is_array($attempts)) {
+                                continue;
+                            }
                             foreach ($attempts as $attempt) {
+                                if (!is_array($attempt)) {
+                                    continue;
+                                }
                                 $attempt['ip'] = $ip;
                                 $all_attempts[] = $attempt;
                             }
@@ -1188,7 +1192,7 @@ if (!defined('ABSPATH')) {
 
                         // Sort by time descending
                         usort($all_attempts, function ($a, $b) {
-                            return $b['time'] - $a['time'];
+                            return ((int) ($b['time'] ?? 0)) <=> ((int) ($a['time'] ?? 0));
                         });
 
                         // Get last 50 attempts
@@ -1208,14 +1212,17 @@ if (!defined('ABSPATH')) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($all_attempts as $attempt): ?>
+                                        <?php foreach ($all_attempts as $attempt):
+                                            $ua_full = (string) ($attempt['user_agent'] ?? 'Unknown');
+                                            $ua_short = strlen($ua_full) > 50 ? substr($ua_full, 0, 50) . '...' : $ua_full;
+                                            ?>
                                             <tr>
-                                                <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $attempt['time'])); ?>
+                                                <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), (int) ($attempt['time'] ?? 0))); ?>
                                                 </td>
-                                                <td><code><?php echo esc_html($attempt['username']); ?></code></td>
-                                                <td><code><?php echo esc_html($attempt['ip']); ?></code></td>
-                                                <td class="asl-browser-cell">
-                                                    <?php echo esc_html(substr($attempt['user_agent'] ?? 'Unknown', 0, 50)); ?>...
+                                                <td><code><?php echo esc_html($attempt['username'] ?? ''); ?></code></td>
+                                                <td><code><?php echo esc_html($attempt['ip'] ?? ''); ?></code></td>
+                                                <td class="asl-browser-cell" title="<?php echo esc_attr($ua_full); ?>">
+                                                    <?php echo esc_html($ua_short); ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -1241,7 +1248,7 @@ if (!defined('ABSPATH')) {
                     </div>
                     <div class="asl-card-body">
                         <?php
-                        $admin_log = get_option('asp_admin_access_log', array());
+                        $admin_log = (array) get_option('asp_admin_access_log', array());
                         $admin_log = array_reverse($admin_log); // Most recent first
                         $admin_log = array_slice($admin_log, 0, 30);
 
@@ -1258,14 +1265,17 @@ if (!defined('ABSPATH')) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($admin_log as $entry): ?>
+                                        <?php foreach ($admin_log as $entry):
+                                            $page_full = (string) ($entry['page'] ?? '');
+                                            $page_short = strlen($page_full) > 40 ? substr($page_full, 0, 40) . '...' : $page_full;
+                                            ?>
                                             <tr>
-                                                <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $entry['time'])); ?>
+                                                <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), (int) ($entry['time'] ?? 0))); ?>
                                                 </td>
-                                                <td><?php echo esc_html($entry['username']); ?></td>
-                                                <td><code><?php echo esc_html($entry['ip']); ?></code></td>
-                                                <td class="asl-page-cell">
-                                                    <?php echo esc_html(substr($entry['page'], 0, 40)); ?>...
+                                                <td><?php echo esc_html($entry['username'] ?? ''); ?></td>
+                                                <td><code><?php echo esc_html($entry['ip'] ?? ''); ?></code></td>
+                                                <td class="asl-page-cell" title="<?php echo esc_attr($page_full); ?>">
+                                                    <?php echo esc_html($page_short); ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -1376,11 +1386,11 @@ if (!defined('ABSPATH')) {
             $extensions = array('curl', 'gd', 'imagick', 'mbstring', 'xml', 'zip', 'openssl', 'mysqli', 'pdo_mysql', 'json', 'filter', 'iconv', 'sodium', 'fileinfo');
 
             ob_start();
-            echo "Advanced Security Lite — System Report\n";
+            echo "SS Sentinel — System Report\n";
             echo "Generated: " . gmdate('Y-m-d H:i:s') . " UTC\n";
             echo str_repeat('-', 48) . "\n";
             echo "WordPress:        " . get_bloginfo('version') . "\n";
-            echo "Plugin:           Advanced Security Lite " . ASP_VERSION . "\n";
+            echo "Plugin:           SS Sentinel " . ASP_VERSION . "\n";
             echo "PHP:              " . PHP_VERSION . " (" . php_sapi_name() . ")\n";
             echo "Server:           " . (isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : 'Unknown') . "\n";
             echo "Database:         " . $db_version . "\n";
@@ -1574,7 +1584,7 @@ if (!defined('ABSPATH')) {
             <div id="panel-about" class="asl-panel">
                 <div class="asl-card">
                     <div class="asl-card-header">
-                        <h3><i class="ph ph-sparkle"></i> <?php esc_html_e('About Advanced Security Lite', 'advanced-security-lite'); ?></h3>
+                        <h3><i class="ph ph-sparkle"></i> <?php esc_html_e('About SS Sentinel', 'advanced-security-lite'); ?></h3>
                         <p><?php esc_html_e('Comprehensive WordPress security plugin to protect your website from threats.', 'advanced-security-lite'); ?>
                         </p>
                     </div>
@@ -1702,7 +1712,7 @@ if (!defined('ABSPATH')) {
 
     <!-- Footer -->
     <footer class="asl-footer">
-        <p><?php esc_html_e('Advanced Security Lite', 'advanced-security-lite'); ?>
+        <p><?php esc_html_e('SS Sentinel', 'advanced-security-lite'); ?>
             v<?php echo esc_html(ASP_VERSION); ?> |
             <?php esc_html_e('Powered by SS Internet Services', 'advanced-security-lite'); ?>
         </p>

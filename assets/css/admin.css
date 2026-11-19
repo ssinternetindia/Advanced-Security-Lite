@@ -1,5 +1,5 @@
 /**
- * Advanced Security Lite — Admin UI (plain, WordPress-native)
+ * SS Sentinel — Admin UI (plain, WordPress-native)
  *
  * Flat surfaces, 1px borders, core-blue accents, no gradients, shadows,
  * blur, or animation. Every selector maps 1:1 to the existing markup in
@@ -2216,6 +2216,35 @@
 
 .asl-shell .asl-option:last-child {
     border-bottom: none;
+}
+
+.asl-shell .asl-options-list > .asl-form-row,
+.asl-shell .asl-options-list > .asl-form-group,
+.asl-shell .asl-options-list > .asl-login-design-options {
+    margin: 0 !important;
+    padding: var(--space-4) var(--space-5);
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    border-radius: 0;
+    background: var(--gray-0);
+}
+
+.asl-shell .asl-options-list > .asl-form-row:last-child,
+.asl-shell .asl-options-list > .asl-form-group:last-child,
+.asl-shell .asl-options-list > .asl-login-design-options:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 782px) {
+    .asl-shell .asl-option {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .asl-shell .asl-switch {
+        align-self: center;
+        margin-top: 0;
+    }
 }
 
 /* Bento Grid Dashboard */

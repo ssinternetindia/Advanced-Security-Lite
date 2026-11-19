@@ -26,6 +26,11 @@ class ASP_ImageCaptcha
      */
     private $enabled;
 
+    /**
+     * @var WP_Error|null
+     */
+    private $auth_error = null;
+
     public function __construct()
     {
         add_action('init', array($this, 'init'), 1);
@@ -35,23 +40,35 @@ class ASP_ImageCaptcha
     {
         $this->enabled = (bool) get_option('asp_image_captcha_enabled', 0);
 
-        // Always expose the refresh endpoint so challenges already shown on
-        // screen remain refreshable across settings changes mid-session.
-        add_action('wp_ajax_asp_refresh_captcha', array($this, 'ajaxRefreshCaptcha'));
-        add_action('wp_ajax_nopriv_asp_refresh_captcha', array($this, 'ajaxRefreshCaptcha'));
+        // Do not run alongside Google reCAPTCHA if both options are somehow set.
+        if (
+            $this->enabled
+            && (get_option('asp_recaptcha_v2_enabled', 0) || get_option('asp_recaptcha_v3_enabled', 0))
+            && '' !== (string) get_option('asp_recaptcha_site_key', '')
+            && '' !== (string) get_option('asp_recaptcha_secret_key', '')
+        ) {
+            $this->enabled = false;
+        }
 
         if (!$this->enabled) {
             return;
         }
+
+        add_action('wp_ajax_asp_refresh_captcha', array($this, 'ajaxRefreshCaptcha'));
+        add_action('wp_ajax_nopriv_asp_refresh_captcha', array($this, 'ajaxRefreshCaptcha'));
 
         add_action('login_form', array($this, 'renderLoginField'));
         add_action('register_form', array($this, 'renderRegisterField'));
         add_action('lostpassword_form', array($this, 'renderLostPasswordField'));
         add_action('comment_form_after_fields', array($this, 'renderCommentField'));
 
-        add_filter('wp_authenticate_user', array($this, 'verifyLoginCaptcha'), 10, 2);
+        // Run before core's wp_authenticate_username_password (priority 20) to
+        // prevent username enumeration via CAPTCHA vs invalid_username errors,
+        // and enforce at priority 99 so core cannot overwrite the WP_Error.
+        add_filter('authenticate', array($this, 'verifyLoginCaptcha'), 15, 3);
+        add_filter('authenticate', array($this, 'enforceLoginCaptchaError'), 99, 1);
         add_filter('registration_errors', array($this, 'verifyRegisterCaptcha'), 10, 3);
-        add_action('lostpassword_post', array($this, 'verifyLostPasswordCaptcha'));
+        add_action('lostpassword_post', array($this, 'verifyLostPasswordCaptcha'), 10, 1);
         add_filter('preprocess_comment', array($this, 'verifyCommentCaptcha'));
 
         add_action('login_footer', array($this, 'printScript'));
@@ -130,20 +147,39 @@ class ASP_ImageCaptcha
      * Verification
      * ------------------------------------------------------------------- */
 
-    public function verifyLoginCaptcha($user, $password)
+    public function verifyLoginCaptcha($user, $username = '', $password = '')
     {
-        if (is_wp_error($user)) {
+        $this->auth_error = null;
+
+        if (
+            empty($username)
+            || empty($password)
+            || is_wp_error($user)
+            || (defined('REST_REQUEST') && REST_REQUEST)
+            || (defined('WP_CLI') && WP_CLI)
+            || wp_doing_cron()
+        ) {
             return $user;
         }
 
         if (!$this->checkRequest()) {
-            return new WP_Error(
+            remove_filter('authenticate', 'wp_authenticate_username_password', 20);
+            remove_filter('authenticate', 'wp_authenticate_email_password', 20);
+            remove_filter('authenticate', 'wp_authenticate_application_password', 20);
+
+            $this->auth_error = new WP_Error(
                 'asp_captcha_failed',
                 __('Incorrect CAPTCHA. Please try again.', 'advanced-security-lite')
             );
+            return $this->auth_error;
         }
 
         return $user;
+    }
+
+    public function enforceLoginCaptchaError($user)
+    {
+        return null !== $this->auth_error ? $this->auth_error : $user;
     }
 
     public function verifyRegisterCaptcha($errors, $sanitized_user_login, $user_email)
@@ -155,9 +191,13 @@ class ASP_ImageCaptcha
         return $errors;
     }
 
-    public function verifyLostPasswordCaptcha()
+    public function verifyLostPasswordCaptcha($errors = null)
     {
         if (!$this->checkRequest()) {
+            if ($errors instanceof WP_Error) {
+                $errors->add('asp_captcha_failed', __('Incorrect CAPTCHA. Please try again.', 'advanced-security-lite'));
+                return;
+            }
             wp_die(esc_html__('Incorrect CAPTCHA. Please try again.', 'advanced-security-lite'));
         }
     }
@@ -165,7 +205,11 @@ class ASP_ImageCaptcha
     public function verifyCommentCaptcha($commentdata)
     {
         if (!is_user_logged_in() && !$this->checkRequest()) {
-            wp_die(esc_html__('Incorrect CAPTCHA. Please try again.', 'advanced-security-lite'));
+            wp_die(
+                esc_html__('Incorrect CAPTCHA. Please try again.', 'advanced-security-lite'),
+                '',
+                array('response' => 403, 'back_link' => true)
+            );
         }
 
         return $commentdata;

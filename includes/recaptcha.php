@@ -11,6 +11,8 @@ class ASP_Recaptcha
     private $secret_key;
     private $v2_enabled;
     private $v3_enabled;
+    /** @var WP_Error|null */
+    private $auth_error = null;
 
     public function __construct()
     {
@@ -38,9 +40,12 @@ class ASP_Recaptcha
     private function initHooks()
     {
         if (($this->v2_enabled || $this->v3_enabled) && !empty($this->site_key) && !empty($this->secret_key)) {
-            // Add reCAPTCHA to login form
+            // Add reCAPTCHA to login form (verify before core auth at priority 20
+            // to prevent username enumeration, and enforce at priority 99 so
+            // core authenticators cannot overwrite the WP_Error).
             add_action('login_form', array($this, 'addRecaptchaToLogin'));
-            add_filter('wp_authenticate_user', array($this, 'verifyLoginRecaptcha'), 10, 2);
+            add_filter('authenticate', array($this, 'verifyLoginRecaptcha'), 15, 3);
+            add_filter('authenticate', array($this, 'enforceLoginRecaptchaError'), 99, 1);
 
             // Add reCAPTCHA to registration form
             add_action('register_form', array($this, 'addRecaptchaToRegister'));
@@ -48,7 +53,7 @@ class ASP_Recaptcha
 
             // Add reCAPTCHA to lost password form
             add_action('lostpassword_form', array($this, 'addRecaptchaToLostPassword'));
-            add_action('lostpassword_post', array($this, 'verifyLostPasswordRecaptcha'));
+            add_action('lostpassword_post', array($this, 'verifyLostPasswordRecaptcha'), 10, 1);
 
             // Add reCAPTCHA to comment form
             add_action('comment_form_after_fields', array($this, 'addRecaptchaToComments'));
@@ -74,73 +79,35 @@ class ASP_Recaptcha
 
     private function getV3Script()
     {
-        // Escaping site key in JS output
+        $key = esc_js($this->site_key);
         return "
         document.addEventListener('DOMContentLoaded', function() {
+            if (typeof grecaptcha === 'undefined' || !grecaptcha.ready) {
+                return;
+            }
             grecaptcha.ready(function() {
-                // Login form
-                var loginForm = document.getElementById('loginform');
-                if (loginForm) {
-                    loginForm.addEventListener('submit', function(e) {
+                function bindV3Form(formId, actionName) {
+                    var form = document.getElementById(formId);
+                    if (!form) { return; }
+                    form.addEventListener('submit', function(e) {
                         e.preventDefault();
-                        grecaptcha.execute('" . esc_js($this->site_key) . "', {action: 'login'}).then(function(token) {
-                            var input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'g-recaptcha-response';
+                        grecaptcha.execute('" . $key . "', {action: actionName}).then(function(token) {
+                            var input = form.querySelector('input[name=\"g-recaptcha-response\"]');
+                            if (!input) {
+                                input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'g-recaptcha-response';
+                                form.appendChild(input);
+                            }
                             input.value = token;
-                            loginForm.appendChild(input);
-                            loginForm.submit();
+                            HTMLFormElement.prototype.submit.call(form);
                         });
                     });
                 }
-                
-                // Registration form
-                var registerForm = document.getElementById('registerform');
-                if (registerForm) {
-                    registerForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        grecaptcha.execute('" . esc_js($this->site_key) . "', {action: 'register'}).then(function(token) {
-                            var input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'g-recaptcha-response';
-                            input.value = token;
-                            registerForm.appendChild(input);
-                            registerForm.submit();
-                        });
-                    });
-                }
-                
-                // Lost password form
-                var lostpasswordForm = document.getElementById('lostpasswordform');
-                if (lostpasswordForm) {
-                    lostpasswordForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        grecaptcha.execute('" . esc_js($this->site_key) . "', {action: 'lostpassword'}).then(function(token) {
-                            var input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'g-recaptcha-response';
-                            input.value = token;
-                            lostpasswordForm.appendChild(input);
-                            lostpasswordForm.submit();
-                        });
-                    });
-                }
-                
-                // Comment form
-                var commentForm = document.getElementById('commentform');
-                if (commentForm) {
-                    commentForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        grecaptcha.execute('" . esc_js($this->site_key) . "', {action: 'comment'}).then(function(token) {
-                            var input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'g-recaptcha-response';
-                            input.value = token;
-                            commentForm.appendChild(input);
-                            commentForm.submit();
-                        });
-                    });
-                }
+                bindV3Form('loginform', 'login');
+                bindV3Form('registerform', 'register');
+                bindV3Form('lostpasswordform', 'lostpassword');
+                bindV3Form('commentform', 'comment');
             });
         });
         ";
@@ -196,17 +163,36 @@ class ASP_Recaptcha
         }
     }
 
-    public function verifyLoginRecaptcha($user, $password)
+    public function verifyLoginRecaptcha($user, $username = '', $password = '')
     {
-        if (is_wp_error($user)) {
+        $this->auth_error = null;
+
+        if (
+            empty($username)
+            || empty($password)
+            || is_wp_error($user)
+            || (defined('REST_REQUEST') && REST_REQUEST)
+            || (defined('WP_CLI') && WP_CLI)
+            || wp_doing_cron()
+        ) {
             return $user;
         }
 
         if (!$this->verifyRecaptcha('login')) {
-            return new WP_Error('recaptcha_failed', __('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'));
+            remove_filter('authenticate', 'wp_authenticate_username_password', 20);
+            remove_filter('authenticate', 'wp_authenticate_email_password', 20);
+            remove_filter('authenticate', 'wp_authenticate_application_password', 20);
+
+            $this->auth_error = new WP_Error('recaptcha_failed', __('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'));
+            return $this->auth_error;
         }
 
         return $user;
+    }
+
+    public function enforceLoginRecaptchaError($user)
+    {
+        return null !== $this->auth_error ? $this->auth_error : $user;
     }
 
     public function verifyRegisterRecaptcha($errors, $sanitized_user_login, $user_email)
@@ -218,9 +204,13 @@ class ASP_Recaptcha
         return $errors;
     }
 
-    public function verifyLostPasswordRecaptcha()
+    public function verifyLostPasswordRecaptcha($errors = null)
     {
         if (!$this->verifyRecaptcha('lostpassword')) {
+            if ($errors instanceof WP_Error) {
+                $errors->add('recaptcha_failed', __('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'));
+                return;
+            }
             wp_die(esc_html__('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'));
         }
     }
@@ -228,7 +218,11 @@ class ASP_Recaptcha
     public function verifyCommentRecaptcha($commentdata)
     {
         if (!is_user_logged_in() && !$this->verifyRecaptcha('comment')) {
-            wp_die(esc_html__('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'));
+            wp_die(
+                esc_html__('reCAPTCHA verification failed. Please try again.', 'advanced-security-lite'),
+                '',
+                array('response' => 403, 'back_link' => true)
+            );
         }
 
         return $commentdata;

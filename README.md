@@ -1,14 +1,16 @@
-# Advanced Security Lite
+# SS Sentinel – Lightweight Security, CAPTCHA & Firewall
 
-**Contributors:** Anuj Kumar Singh · **Requires:** WordPress 5.8+ · **PHP:** 7.4 – 8.x · **License:** GPLv2 or later · **Version:** 1.0.2
+> **Rebrand Notice:** Formerly known as **Advanced Security Lite** — rebranded to **SS Sentinel** in v1.0.3 with 100% backwards compatibility (all filenames, slugs, settings, and `.htaccess` markers remain unchanged for seamless upgrades).
 
-A powerful WordPress security plugin featuring a clean admin interface and advanced protection tools to safeguard your website from threats.
+**Contributors:** SS Internet Services · **Requires:** WordPress 5.8+ · **PHP:** 7.4 – 8.x · **License:** GPLv2 or later · **Version:** 1.0.3
+
+A powerful **free** WordPress security plugin featuring a clean admin interface and advanced protection tools to safeguard your website from threats.
 
 ---
 
 ## Overview
 
-**Advanced Security Lite** is a lightweight security plugin that protects your WordPress website from common threats, brute force attacks, and vulnerabilities. It ships with a clean, WordPress-native admin interface, color-coded navigation, a live Security Score, and a dedicated Status tab — enterprise-grade security features without bloating your site.
+**SS Sentinel** is a lightweight security plugin that protects your WordPress website from common threats, brute force attacks, and vulnerabilities. It ships with a clean, WordPress-native admin interface, color-coded navigation, a live Security Score, and a dedicated Status tab — enterprise-grade security features without bloating your site.
 
 ### Highlights
 
@@ -74,7 +76,7 @@ A powerful WordPress security plugin featuring a clean admin interface and advan
 
 1. Upload the `advanced-security-lite` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
-3. Open **Security Lite** in the admin menu and configure your settings.
+3. Open **SS Sentinel** in the admin menu and configure your settings.
 
 ---
 
@@ -98,6 +100,20 @@ Enable "Hide Admin Notices" in the General tab. Hidden notices are listed behind
 ---
 
 ## Changelog
+
+### 1.0.3
+
+**Added & Changed**
+- Rebranded to **SS Sentinel – Lightweight Security, CAPTCHA & Firewall** (filenames, slugs, options, and `.htaccess` markers preserved)
+- Salt regeneration popup now offers **Re-login Now** and **Later** options; fixed PHP 8+ fatal error when clearing sessions
+- Added Login Rate Limiting to the Bento Dashboard Security Score & Recommendations and unified Header badge scoring
+
+**Security & Reliability**
+- Closed REST API `?rest_route=` bypass and added custom `rest_get_url_prefix()` support
+- Moved rate limiting (priority 5) and CAPTCHA verification (priority 15) before core auth with priority-99 enforcement and REST/WP-CLI/Cron exemptions
+- Fixed reCAPTCHA v3 comment form submission (`HTMLFormElement.prototype.submit`), enforced 3-way CAPTCHA mutual exclusion, and added back links on comment CAPTCHA errors
+- Blocked direct `lostpassword`/`rp`/`resetpass` routes, unauthenticated XML-RPC methods, Core XML Sitemaps & oEmbed user leaks, and `?ver=` WP version query strings
+- Fixed `register_activation_hook` timing, deactivation `.htaccess` cleanup, Multisite Super Admin guards, salt regex for embedded quotes, Retina-safe email obfuscation, SVG XSS upload scanning, and `wp_commentmeta` spam cleanup
 
 ### 1.0.2
 

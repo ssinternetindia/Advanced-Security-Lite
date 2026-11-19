@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Advanced Security Lite 1.0.5\n"
+"Project-Id-Version: SS Sentinel 1.0.3\n"
 "Report-Msgid-Bugs-To: https://ssinternet.in/\n"
 "POT-Creation-Date: 2025-12-10 15:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -15,21 +15,17 @@ msgstr ""
 "X-Domain: advanced-security-lite\n"
 
 #: advanced-security-lite.php:135 includes/admin-page.php:15
-msgid "Advanced Security Lite"
-msgstr ""
-
-#: advanced-security-lite.php:136
-msgid "Security Lite"
+msgid "SS Sentinel"
 msgstr ""
 
 #: advanced-security-lite.php:38
 #, php-format
-msgid "Advanced Security Lite requires WordPress %s or higher. You are running version %s."
+msgid "SS Sentinel requires WordPress %s or higher. You are running version %s."
 msgstr ""
 
 #: advanced-security-lite.php:47
 #, php-format
-msgid "Advanced Security Lite requires PHP %s or higher. You are running version %s."
+msgid "SS Sentinel requires PHP %s or higher. You are running version %s."
 msgstr ""
 
 #: advanced-security-lite.php:173

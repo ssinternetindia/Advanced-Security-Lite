@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
 
 class ASP_Enhancements
 {
+    /** @var WP_Error|null */
+    private $lockout_error = null;
 
     public function __construct()
     {
@@ -21,10 +23,12 @@ class ASP_Enhancements
         // active lockout so legitimate users are never stuck locked out.
         add_action('wp_login', array($this, 'clearLoginAttemptsOnSuccess'), 10, 1);
 
-        // Rate limiting only runs when explicitly enabled and honors the
-        // configured attempt count and lockout window.
+        // Rate limiting runs at priority 5 (before core password hashing at
+        // priority 20) and enforces the lockout at priority 99 so neither core
+        // nor third-party authenticators can overwrite a lockout WP_Error.
         if (get_option('asp_enable_login_limit', 0)) {
-            add_filter('authenticate', array($this, 'limitLoginAttempts'), 30, 3);
+            add_filter('authenticate', array($this, 'limitLoginAttempts'), 5, 3);
+            add_filter('authenticate', array($this, 'enforceLockoutError'), 99, 1);
         }
 
         // Enhanced file security
@@ -42,10 +46,14 @@ class ASP_Enhancements
         // Performance optimizations
         add_action('init', array($this, 'performanceOptimizations'));
 
-        // Disable Password Recovery
+        // Disable Password Recovery (also blocks direct ?action=lostpassword|rp|resetpass
+        // requests before retrieve_password() can enumerate valid usernames/emails).
         if (get_option('asp_disable_password_recovery', 0)) {
             add_filter('allow_password_reset', '__return_false');
             add_action('login_head', array($this, 'hidePasswordResetLink'));
+            add_action('login_form_lostpassword', array($this, 'blockPasswordRecoveryRequests'));
+            add_action('login_form_rp', array($this, 'blockPasswordRecoveryRequests'));
+            add_action('login_form_resetpass', array($this, 'blockPasswordRecoveryRequests'));
         }
 
         // Hide admin notices + admin bar bell
@@ -73,7 +81,7 @@ class ASP_Enhancements
 
     public function addErrorLogNode($wp_admin_bar)
     {
-        if (!is_admin() || !current_user_can('manage_options')) {
+        if (!is_admin() || !current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
@@ -92,7 +100,7 @@ class ASP_Enhancements
 
     public function enqueueErrorLogViewer()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
 
@@ -311,7 +319,7 @@ JS;
      */
     public function renderErrorLogModal()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('manage_options') || (is_multisite() && !is_super_admin())) {
             return;
         }
         ?>
@@ -603,8 +611,11 @@ JS;
         $username = is_string($username) ? mb_substr($username, 0, 60) : '';
 
         $attempts = get_option('asp_failed_logins', array());
+        if (!is_array($attempts)) {
+            $attempts = array();
+        }
 
-        if (!isset($attempts[$ip])) {
+        if (!isset($attempts[$ip]) || !is_array($attempts[$ip])) {
             $attempts[$ip] = array();
         }
 
@@ -663,6 +674,8 @@ JS;
 
     public function limitLoginAttempts($user, $username, $password)
     {
+        $this->lockout_error = null;
+
         if (empty($username) || empty($password)) {
             return $user;
         }
@@ -676,14 +689,7 @@ JS;
         // enforcement that is immune to the option read/write race.
         $lock = get_transient('asp_lock_' . md5($ip));
         if ($lock) {
-            $window = (int) get_option('asp_lockout_duration', 30) * MINUTE_IN_SECONDS;
-            if ($window < MINUTE_IN_SECONDS) {
-                $window = 30 * MINUTE_IN_SECONDS;
-            }
-            return new WP_Error(
-                'too_many_attempts',
-                __('Too many failed login attempts. Please try again later.', 'advanced-security-lite')
-            );
+            return $this->rejectLockedLogin();
         }
 
         $max_attempts = (int) get_option('asp_max_login_attempts', 5);
@@ -709,19 +715,47 @@ JS;
                 // Belt-and-suspenders: also set the transient here for
                 // the edge case where logFailedLogin didn't fire first.
                 set_transient('asp_lock_' . md5($ip), 1, $window);
-                return new WP_Error(
-                    'too_many_attempts',
-                    __('Too many failed login attempts. Please try again later.', 'advanced-security-lite')
-                );
+                return $this->rejectLockedLogin();
             }
         }
 
         return $user;
     }
 
+    /**
+     * Reject a locked-out login and prevent core's priority-20 authenticators
+     * from ignoring the WP_Error and logging the user in anyway.
+     *
+     * @return WP_Error
+     */
+    private function rejectLockedLogin()
+    {
+        remove_filter('authenticate', 'wp_authenticate_username_password', 20);
+        remove_filter('authenticate', 'wp_authenticate_email_password', 20);
+        remove_filter('authenticate', 'wp_authenticate_application_password', 20);
+
+        $this->lockout_error = new WP_Error(
+            'too_many_attempts',
+            __('Too many failed login attempts. Please try again later.', 'advanced-security-lite')
+        );
+
+        return $this->lockout_error;
+    }
+
+    public function enforceLockoutError($user)
+    {
+        return null !== $this->lockout_error ? $this->lockout_error : $user;
+    }
+
     public function hidePasswordResetLink()
     {
         echo '<style>#nav > a[href*="lostpassword"] { display: none !important; }</style>';
+    }
+
+    public function blockPasswordRecoveryRequests()
+    {
+        wp_safe_redirect(wp_login_url());
+        exit;
     }
 
     public function enhancedFileSecurity()
@@ -744,9 +778,10 @@ JS;
             $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $scannable_types = array('jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg');
 
-            // Only scan image files that shouldn't contain code
-            if (in_array($file_extension, $scannable_types)) {
-                $content = @file_get_contents($file['tmp_name']);
+            // Only scan image files that shouldn't contain code (read up to 4 MB to avoid memory exhaustion)
+            if (in_array($file_extension, $scannable_types, true)) {
+                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents
+                $content = @file_get_contents($file['tmp_name'], false, null, 0, 4 * 1024 * 1024);
 
                 if (false !== $content) {
                     // Look for PHP code in image files (common malware technique)
@@ -759,6 +794,14 @@ JS;
                         '/exec\s*\(/i',
                         '/passthru\s*\(/i'
                     );
+
+                    // SVG files can also carry Stored XSS payloads (<script>, inline event handlers, script URIs).
+                    if ('svg' === $file_extension) {
+                        $malicious_patterns[] = '/<script\b/i';
+                        $malicious_patterns[] = '/\bon\w+\s*=/i';
+                        $malicious_patterns[] = '/javascript\s*:/i';
+                        $malicious_patterns[] = '/vbscript\s*:/i';
+                    }
 
                     foreach ($malicious_patterns as $pattern) {
                         if (preg_match($pattern, $content)) {
@@ -787,8 +830,8 @@ JS;
 
     public function enhancedDatabaseSecurity()
     {
-        // Remove WordPress version from database
-        remove_action('wp_head', 'wp_generator');
+        // Note: wp_generator removal is controlled by ASP_SecurityFeatures
+        // when the "Hide WordPress Version" option is enabled.
 
         // Disable database error reporting in production
         if (!defined('WP_DEBUG') || !WP_DEBUG) {
@@ -825,6 +868,9 @@ JS;
         $user = wp_get_current_user();
         if ($user->ID > 0) {
             $access_log = get_option('asp_admin_access_log', array());
+            if (!is_array($access_log)) {
+                $access_log = array();
+            }
             $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
 
             $access_log[] = array(
@@ -919,7 +965,6 @@ JS;
         // Optimize autoloaded options (only in admin, once per day)
         if (is_admin() && !get_transient('asp_autoload_optimized')) {
             add_action('admin_init', array($this, 'optimizeAutoloadedOptions'), 999);
-            set_transient('asp_autoload_optimized', true, DAY_IN_SECONDS);
         }
     }
 
@@ -930,14 +975,22 @@ JS;
             return;
         }
 
-        // Remove spam comments older than 30 days
+        // Remove spam comments older than 30 days and their associated commentmeta.
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $wpdb->query("DELETE cm FROM {$wpdb->commentmeta} cm INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id WHERE c.comment_approved = 'spam' AND c.comment_date < DATE_SUB(NOW(), INTERVAL 30 DAY)");
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         $wpdb->query("DELETE FROM {$wpdb->comments} WHERE comment_approved = 'spam' AND comment_date < DATE_SUB(NOW(), INTERVAL 30 DAY)");
     }
 
     public function optimizeAutoloadedOptions()
     {
+        if (!current_user_can('manage_options') || get_transient('asp_autoload_optimized')) {
+            return;
+        }
+
+        set_transient('asp_autoload_optimized', true, DAY_IN_SECONDS);
+
         global $wpdb;
 
         // Find large autoloaded options

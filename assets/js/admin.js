@@ -1,5 +1,5 @@
 /**
- * Advanced Security Lite - Admin JavaScript
+ * SS Sentinel - Admin JavaScript
  * Updated for new layout structure
  */
 
@@ -145,7 +145,8 @@
 
                 $summary.text(matches + ' matching setting' + (matches === 1 ? '' : 's') + ' for "' + $input.val() + '"');
                 if (matches === 0) {
-                    $list.append('<p class="asl-search-empty">No matching settings found.</p>');
+                    var noMatch = (asp_ajax.i18n && asp_ajax.i18n.noSearchMatches) || 'No matching settings found.';
+                    $list.append($('<p class="asl-search-empty"></p>').text(noMatch));
                 }
 
                 $form.hide();
@@ -199,7 +200,8 @@
 
                 var done = function () {
                     var original = $btn.html();
-                    $btn.html('<i class="ph ph-check"></i> Copied!');
+                    var copiedLabel = (asp_ajax.i18n && asp_ajax.i18n.copied) || 'Copied!';
+                    $btn.empty().append('<i class="ph ph-check"></i> ').append(document.createTextNode(copiedLabel));
                     setTimeout(function () { $btn.html(original); }, 2000);
                 };
 
@@ -238,13 +240,19 @@
 
             $('#recaptcha_v2_enabled').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('#recaptcha_v3_enabled').prop('checked', false);
+                    $('#recaptcha_v3_enabled, #image_captcha_enabled').prop('checked', false);
                 }
                 toggleRecaptchaFields();
             });
             $('#recaptcha_v3_enabled').on('change', function () {
                 if ($(this).is(':checked')) {
-                    $('#recaptcha_v2_enabled').prop('checked', false);
+                    $('#recaptcha_v2_enabled, #image_captcha_enabled').prop('checked', false);
+                }
+                toggleRecaptchaFields();
+            });
+            $('#image_captcha_enabled').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#recaptcha_v2_enabled, #recaptcha_v3_enabled').prop('checked', false);
                 }
                 toggleRecaptchaFields();
             });
@@ -333,12 +341,25 @@
             }, 1000);
         },
 
+        // Track when salts have been regenerated in this session so subsequent
+        // actions prompt for re-login instead of showing a connection error.
+        saltsRegenerated: false,
+        lastLoginUrl: '',
+
         // Save settings
         saveSettings: function (isAutoSave) {
             var $form = $('#asl-settings-form');
             var $saveBtn = $('.asl-save-bar .asl-btn-primary');
             var $status = $('.asl-save-status');
             var t = (asp_ajax.i18n || {});
+
+            if (this.saltsRegenerated) {
+                this.showLogoutModal(
+                    t.saltReloginHint || 'All active sessions have been invalidated. Please re-login to continue making changes.',
+                    this.lastLoginUrl || window.location.href
+                );
+                return;
+            }
 
             if (!isAutoSave) {
                 $saveBtn.prop('disabled', true).text(t.saving || 'Saving...');
@@ -380,6 +401,11 @@
                             setTimeout(function () {
                                 window.location.reload();
                             }, 500);
+                        } else {
+                            $status.css('color', '#22c55e').text(t.saved || '✓ Saved successfully!');
+                            setTimeout(function () {
+                                $status.text('');
+                            }, 2500);
                         }
                     } else {
                         $status.css('color', '#ef4444').text((t.errorPrefix || 'Error: ') + response.data);
@@ -392,7 +418,10 @@
                 },
                 complete: function () {
                     if (!isAutoSave) {
-                        $saveBtn.prop('disabled', false).text('✓ Save All Settings');
+                        $saveBtn.prop('disabled', false)
+                            .empty()
+                            .append('<i class="ph ph-check"></i> ')
+                            .append(document.createTextNode(t.saveAll || 'Save All Settings'));
 
                         // Clear status after 3 seconds
                         setTimeout(function () {
@@ -423,16 +452,17 @@
                     nonce: asp_ajax.nonce
                 },
                 success: function (response) {
+                    $btn.prop('disabled', false).html(originalHtml);
                     if (response.success) {
                         if (response.data && response.data.logout) {
+                            ASL_Admin.saltsRegenerated = true;
+                            ASL_Admin.lastLoginUrl = response.data.redirect_url || '';
                             ASL_Admin.showLogoutModal(response.data.message, response.data.redirect_url);
                         } else {
                             ASL_Admin.showNotification(t.saltSuccess || 'Salt keys regenerated!', 'success');
-                            $btn.prop('disabled', false).html(originalHtml);
                         }
                     } else {
                         ASL_Admin.showNotification((t.errorPrefix || 'Error: ') + response.data, 'error');
-                        $btn.prop('disabled', false).html(originalHtml);
                     }
                 },
                 error: function () {
@@ -479,40 +509,48 @@
             });
         },
 
-        // Show logout modal (built via DOM methods so server-provided text
-        // and URLs can never inject markup)
+        // Show salt-updated modal with Re-login Now / Later options
+        // (built via DOM methods so server-provided text/URLs can never inject markup)
         showLogoutModal: function (message, redirectUrl) {
             var t = (asp_ajax.i18n || {});
 
-            var $overlay = $('<div class="asl-modal-overlay"></div>');
+            var $overlay = $('<div class="asl-modal-overlay" role="dialog" aria-modal="true"></div>');
             var $modal = $('<div class="asl-modal"></div>');
-            var $header = $('<div class="asl-modal-header"></div>').append($('<h3></h3>').text(t.modalTitle || 'Security Update Complete'));
+            var $header = $('<div class="asl-modal-header"></div>').append(
+                $('<h3 style="display:flex;align-items:center;gap:8px;"></h3>')
+                    .append('<i class="ph ph-check-circle" style="color:#00a32a;font-size:20px;"></i>')
+                    .append(document.createTextNode(t.modalTitle || 'Salt Keys Updated'))
+            );
             var $body = $('<div class="asl-modal-body"></div>');
-            var $message = $('<p></p>').text(message);
-            var countdownText = document.createTextNode((t.redirectingIn || 'Redirecting in %d seconds...').replace('%d', '5'));
-            var $countdownP = $('<p></p>').append($('<strong></strong>').append(countdownText));
-            var $footer = $('<div class="asl-modal-footer"></div>');
-            var $loginBtn = $('<button class="asl-btn asl-btn-primary"></button>').text(t.loginNow || 'Login Now');
+            var $message = $('<p style="font-weight:500;color:#1d2327;"></p>').text(message);
+            var $hint = $('<p style="color:#646970;font-size:13px;margin-bottom:0;"></p>').text(
+                t.saltReloginHint || 'All active sessions have been invalidated. You can re-login immediately or sign in later.'
+            );
+            var $footer = $('<div class="asl-modal-footer" style="display:flex;justify-content:flex-end;gap:10px;"></div>');
+            var $laterBtn = $('<button type="button" class="asl-btn asl-btn-secondary"></button>').text(t.loginLater || 'Later');
+            var $loginBtn = $('<button type="button" class="asl-btn asl-btn-primary"></button>').text(t.loginNow || 'Re-login Now');
 
-            $footer.append($loginBtn);
-            $body.append($message, $countdownP);
-            $modal.append($header, $body, $footer);
-            $overlay.append($modal);
-            $('body').append($overlay);
+            function closeModal() {
+                $(document).off('keydown.aslSaltModal');
+                $overlay.remove();
+            }
 
+            $laterBtn.on('click', closeModal);
             $loginBtn.on('click', function () {
                 window.location.href = redirectUrl;
             });
+            $overlay.on('click', function (e) {
+                if (e.target === this) { closeModal(); }
+            });
+            $(document).on('keydown.aslSaltModal', function (e) {
+                if (e.key === 'Escape') { closeModal(); }
+            });
 
-            var countdown = 5;
-            var timer = setInterval(function () {
-                countdown--;
-                countdownText.textContent = (t.redirectingIn || 'Redirecting in %d seconds...').replace('%d', String(countdown));
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    window.location.href = redirectUrl;
-                }
-            }, 1000);
+            $footer.append($laterBtn, $loginBtn);
+            $body.append($message, $hint);
+            $modal.append($header, $body, $footer);
+            $overlay.append($modal);
+            $('body').append($overlay);
         },
 
         // Initialize notifications
@@ -524,7 +562,8 @@
 
         // Show notification
         showNotification: function (message, type) {
-            type = type || 'info';
+            var allowedTypes = ['info', 'success', 'error', 'warning'];
+            type = allowedTypes.indexOf(type) !== -1 ? type : 'info';
 
             var icon = '💬';
             if (type === 'success') icon = '✅';
