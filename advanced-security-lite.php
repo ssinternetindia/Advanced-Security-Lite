@@ -1041,7 +1041,7 @@ function asp_get_settings_schema()
         'revisions_limit' => array('default' => 5, 'type' => 'int', 'min' => 1, 'max' => 100),
         'disable_php_execution' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
         'protect_sensitive_files' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
-        'remove_data_on_uninstall' => array('default' => 1, 'type' => 'bool', 'min' => null, 'max' => null),
+        'remove_data_on_uninstall' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
         'auto_delete_spam' => array('default' => 0, 'type' => 'bool', 'min' => null, 'max' => null),
     );
 }

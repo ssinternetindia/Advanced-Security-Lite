@@ -2274,9 +2274,10 @@
 }
 
 .asl-score-bars {
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3) var(--space-5);
+    gap: var(--space-3) var(--space-6);
     padding-top: var(--space-4);
     border-top: 1px solid var(--border-light);
 }
@@ -2285,11 +2286,14 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-width: 0;
 }
 
 .asl-score-bar-meta {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     font-size: 12px;
     font-weight: 600;
     color: var(--gray-700);
@@ -2371,6 +2375,20 @@
     border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
+    white-space: nowrap;
+}
+
+.asl-ip-cell {
+    display: inline-block;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.asl-time-cell {
+    white-space: nowrap;
 }
 
 .asl-event-warn {

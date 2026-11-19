@@ -479,8 +479,8 @@ if (!defined('ABSPATH')) {
                                             <tr>
                                                 <td><span class="asl-event-pill asl-event-<?php echo esc_attr($ev['kind']); ?>"><?php echo esc_html($ev['type']); ?></span></td>
                                                 <td><code><?php echo esc_html($ev['who'] ?: '—'); ?></code></td>
-                                                <td><code><?php echo esc_html($ev['ip'] ?: '—'); ?></code></td>
-                                                <td><?php echo $ev['time'] ? esc_html(human_time_diff($ev['time'], time()) . ' ' . __('ago', 'advanced-security-lite')) : '—'; ?></td>
+                                                <td><code class="asl-ip-cell" title="<?php echo esc_attr($ev['ip'] ?: ''); ?>"><?php echo esc_html($ev['ip'] ?: '—'); ?></code></td>
+                                                <td class="asl-time-cell"><?php echo $ev['time'] ? esc_html(human_time_diff($ev['time'], time()) . ' ' . __('ago', 'advanced-security-lite')) : '—'; ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -1323,7 +1323,7 @@ if (!defined('ABSPATH')) {
                                 </div>
                                 <div class="asl-switch">
                                     <input type="checkbox" id="remove_data_on_uninstall" name="remove_data_on_uninstall"
-                                        <?php checked(get_option('asp_remove_data_on_uninstall', 1), 1); ?>>
+                                        <?php checked(get_option('asp_remove_data_on_uninstall', 0), 1); ?>>
                                     <span class="asl-switch-slider"></span>
                                 </div>
                             </label>

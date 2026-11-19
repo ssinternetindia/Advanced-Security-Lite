@@ -213,8 +213,8 @@ function asp_uninstall_plugin()
     asp_remove_cron_jobs();
     asp_flush_rewrite_rules();
 
-    // Check if user wants to remove data (default: true)
-    if (get_option('asp_remove_data_on_uninstall', 1)) {
+    // Check if user explicitly opted in to remove data (default: false)
+    if (get_option('asp_remove_data_on_uninstall', 0)) {
         asp_cleanup_htaccess();
         asp_remove_all_options();
         asp_remove_transients();
